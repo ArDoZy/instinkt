@@ -77,10 +77,14 @@ export function createGame(options = {}) {
     lastCombatCells: [],
     /** Instincts déjà invoqués pendant la manche courante (§4). */
     summonedInstinctsThisTurn: [],
+    /** Joueur devant défausser après une pioche à main pleine (§3.2). */
+    pendingDiscard: null,
     /** Journal lisible : { round, player, text }. */
     log: [],
-    /** File d'événements de la dernière résolution, rejouée par la vue. */
+    /** File d'événements de la dernière action, rejouée par la vue. */
     events: [],
+    /** Événements de la dernière résolution — bouton « rejouer le dernier tour ». */
+    lastTurnEvents: [],
     winner: null,
     endedReason: null,
   };
