@@ -26,13 +26,46 @@ export function createBoardView(container, handlers = {}) {
       class: 'case',
       role: 'gridcell',
       dataCell: cell,
-      tabindex: '-1',
+      // Curseur roulant : une seule case est dans l'ordre de tabulation.
+      tabindex: cell === 0 ? '0' : '-1',
       onclick: () => handlers.onCell?.(cell),
       onmouseenter: () => handlers.onHoverCell?.(cell),
       onmouseleave: () => handlers.onHoverCell?.(null),
+      onfocus: () => handlers.onHoverCell?.(cell),
+      onblur: () => handlers.onHoverCell?.(null),
     });
     cellEls.push(node);
     cases.append(node);
+  }
+
+  // Le plateau se parcourt aussi au clavier : flèches pour se déplacer,
+  // Entrée ou Espace pour agir sur la case.
+  const DEPLACEMENTS = {
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1],
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+  };
+  cases.addEventListener('keydown', (event) => {
+    const cell = Number(event.target.dataset.cell);
+    if (Number.isNaN(cell)) return;
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      return handlers.onCell?.(cell);
+    }
+    const pas = DEPLACEMENTS[event.key];
+    if (!pas) return;
+    event.preventDefault();
+    const x = Math.min(W - 1, Math.max(0, xOf(cell) + pas[0]));
+    const y = Math.min(H - 1, Math.max(0, yOf(cell) + pas[1]));
+    focusCell(idx(x, y));
+  });
+
+  function focusCell(cell) {
+    for (const node of cellEls) node.tabIndex = -1;
+    cellEls[cell].tabIndex = 0;
+    cellEls[cell].focus();
   }
 
   const board = el('div', { class: 'plateau', role: 'grid' }, cases, traits, creaturesLayer, overlays, el('div', { class: 'mediane' }));

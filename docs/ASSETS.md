@@ -1,5 +1,11 @@
 # Instynkt — inventaire des assets visuels
 
+> **État** : tout ce qui figure ci-dessous est en place dans `js/ui/assets.js`,
+> soit en version définitive (glyphes, textures, icônes), soit en placeholder
+> géométrique jouable (silhouettes, médaillons, dos de carte, logo). Le jeu est
+> complet et lisible tel quel ; les 25 fichiers de la liste « à fournir » sont
+> des remplacements, pas des manques bloquants.
+
 Colonne **Source** :
 
 - **moteur** : SVG généré en ligne par le code, aucun fichier à fournir ;
@@ -41,9 +47,16 @@ la silhouette ne doit donc pas être chargée au centre.
 | `creature-dominant.svg` | SVG | 64×64 | Silhouette à épaules hautes, tête basse | placeholder → à fournir | bloquant |
 | `creature-chasseur.svg` | SVG | 64×64 | Félin en extension, corps tendu vers l'avant | placeholder → à fournir | bloquant |
 
-> Les placeholders sont des silhouettes géométriques distinctes (proportions et
-> posture différentes) : le jeu est intégralement lisible sans les dessins finaux,
-> puisque l'identité passe par le glyphe.
+> Les placeholders en place sont des silhouettes distinctes par leurs proportions
+> et leur posture : le jeu est intégralement lisible sans les dessins finaux,
+> puisque l'identité passe par le glyphe surimprimé.
+
+### Comment fournir un remplacement
+
+Une silhouette est un SVG en `viewBox="0 0 64 64"`, tracé en `fill="currentColor"`
+(la couleur du joueur est appliquée par le CSS), sans contour clair et sans
+charger le centre, que le glyphe occupe. Il suffit de coller le contenu dans
+`SILHOUETTES[instinct]` (`js/ui/assets.js`) ; rien d'autre ne change.
 
 ## 3. Textures de biome
 
@@ -58,7 +71,7 @@ en encre sur la teinte du biome — jamais de dégradé (§8).
 | `texture-desert.svg` | pattern SVG/CSS | 7×7 tuile | Semis de points (granulé) | moteur | bloquant |
 | `texture-montagne.svg` | pattern SVG/CSS | 8×8 tuile | Hachures serrées à 135°, plus appuyées | moteur | bloquant |
 
-*(Déjà implémentées en CSS dans `css/dev.css` — voir la page de palier 1.)*
+*(Implémentées en CSS dans `css/board.css`.)*
 
 ## 4. Illustrations de carte (16)
 
@@ -84,9 +97,9 @@ parchemin, pas d'aplat de couleur vive.
 | `carte-poussee_volcanique.svg` | SVG | 160×120 | Faille qui soulève une dalle | placeholder → à fournir | confort |
 | `carte-fertilisation.svg` | SVG | 160×120 | Pousse perçant un éboulis | placeholder → à fournir | confort |
 
-> Placeholder prévu : le médaillon affiche un motif géométrique dérivé de la
-> catégorie (instinct / buff / terrain) + l'initiale du nom en display. Les cartes
-> sont jouables et distinguables sans illustration.
+> Placeholder en place : le médaillon affiche un motif géométrique dérivé de la
+> catégorie (instinct / buff / terrain) et l'initiale du nom en display. Les cartes
+> sont jouables et distinguables sans illustration — voir `cardArt()`.
 
 ## 5. Interface
 

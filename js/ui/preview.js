@@ -86,9 +86,6 @@ export function cardPreview(state, player, cardId) {
   return { marks, targets };
 }
 
-/** Aperçu du carré 2×2 posé sous le curseur. */
-export const areaPreview = (topLeft) => ({ marks: { zone: squareCells(topLeft) } });
-
 /** Mode debug : la vision de toutes les créatures d'un coup (§9, palier 8). */
 export function allVisionsPreview(state) {
   const vision = new Set();

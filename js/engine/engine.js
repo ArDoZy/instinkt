@@ -19,7 +19,7 @@ import {
   resolveRegen,
   resolveSuddenDeath,
 } from './resolution.js';
-import { PHASES, cloneState, creatureById, isCellFree, livingCreatures, logLine, pushEvent, regionOf, summonableCells } from './state.js';
+import { PHASES, cloneState, isCellFree, livingCreatures, logLine, pushEvent, regionOf, summonableCells } from './state.js';
 import { halfOfCell } from './geometry.js';
 
 export const ACTIONS = /** @type {const} */ ({

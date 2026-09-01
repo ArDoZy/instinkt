@@ -87,6 +87,9 @@ export function createAnimator(boardView, hooks = {}) {
         return animateInstinct(payloads, state);
       case 'biomeChange':
         return animateBiome(payloads, state);
+      case 'energy':
+        for (const payload of payloads) hooks.onEnergy?.(payload);
+        return delay(payloads.some((p) => p.delta > 0) ? TIMINGS.pause * 3 : 0);
       case 'draw':
         return hooks.cards ? hooks.cards.draw(payloads[0].cardId) : delay(TIMINGS.pause);
       case 'playCard':

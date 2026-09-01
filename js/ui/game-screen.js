@@ -19,7 +19,7 @@ import {
 import { ENERGY_ICON, ENERGY_ICON_EMPTY, GLYPHS } from './assets.js';
 import { cardBack, cardFace } from './card-view.js';
 import { createBoardView } from './board-view.js';
-import { el, qs, setChildren } from './dom.js';
+import { el, qs, qsa, setChildren } from './dom.js';
 
 const INSTINCT_LABEL = {
   [INSTINCTS.FUYARD]: 'Fuyard',
@@ -73,7 +73,7 @@ export function createGameScreen(root, handlers) {
     setChildren(
       adversaire,
       el('span', { class: 'qui', dataOwner: id }, 'Adversaire'),
-      energyGauge(player.energy),
+      energyGauge(player.energy, id),
       el(
         'div',
         { class: 'dos-cartes', title: `${player.hand.length} carte(s) en main` },
@@ -208,7 +208,7 @@ export function createGameScreen(root, handlers) {
         'div',
         { class: 'ligne-haute' },
         el('span', { class: 'qui', dataOwner: player.id }, `Joueur ${player.id + 1}`),
-        energyGauge(player.energy),
+        energyGauge(player.energy, player.id),
         chrono,
         ui.pendingCard || ui.pendingSummon
           ? el('button', { class: 'annuler', type: 'button', onclick: handlers.onCancel }, 'Annuler')
@@ -312,10 +312,10 @@ export function createGameScreen(root, handlers) {
 
   // ---------------------------------------------------------------------
 
-  function energyGauge(energy) {
+  function energyGauge(energy, playerId) {
     return el(
       'div',
-      { class: 'energie', title: `${energy}/${BALANCE.energy.max} énergie` },
+      { class: 'energie', dataPlayer: playerId, title: `${energy}/${BALANCE.energy.max} énergie` },
       el('span', { class: 'valeur' }, `${energy}/${BALANCE.energy.max}`),
       el(
         'span',
@@ -347,6 +347,15 @@ export function createGameScreen(root, handlers) {
     },
     /** Éléments dont les animations de carte ont besoin. */
     coucheCartes,
+    /** Les cristaux gagnés se remplissent un par un (§7). */
+    animateEnergy(playerId, delta) {
+      if (delta <= 0) return;
+      const cristaux = qsa(`.energie[data-player="${playerId}"] .cristaux .plein`, screen);
+      for (const [i, node] of cristaux.slice(-delta).entries()) {
+        node.style.setProperty('--retard', `${i * 90}ms`);
+        node.classList.add('se-remplit');
+      }
+    },
     pileEl: () => qs('.pioche', barre),
     handEl: () => qs('.main', barre),
     setTimer(seconds, urgent) {

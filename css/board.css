@@ -346,3 +346,10 @@
   .leurre svg { animation: none; }
   .creature.meurt { opacity: 0; }
 }
+
+/* Parcours au clavier : la case focalisée est nettement marquée. */
+.case:focus-visible {
+  outline: 3px solid var(--ambre);
+  outline-offset: -3px;
+  z-index: 1;
+}

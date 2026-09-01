@@ -331,3 +331,16 @@ button.primaire:hover:not(:disabled) { background: var(--parchemin); border-colo
   .journal ol { max-height: 140px; }
   .plateau { height: auto; width: min(100%, 78vh); }
 }
+
+/* Les cristaux gagnés se remplissent un par un. */
+.energie .cristaux .se-remplit {
+  animation: cristal calc(360ms * var(--anim)) ease-out var(--retard, 0ms) both;
+}
+@keyframes cristal {
+  0% { opacity: 0; transform: scale(0.3); }
+  60% { opacity: 1; transform: scale(1.35); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .energie .cristaux .se-remplit { animation: none; }
+}

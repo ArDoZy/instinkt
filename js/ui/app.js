@@ -26,7 +26,7 @@ import {
 import { createAnimator } from './animator.js';
 import { createCardAnimator } from './card-animator.js';
 import { createGameScreen } from './game-screen.js';
-import { allVisionsPreview, areaPreview, cardPreview, creaturePreview, summonPreview } from './preview.js';
+import { allVisionsPreview, cardPreview, creaturePreview, summonPreview } from './preview.js';
 import { deckScreen, gameOverScreen, homeScreen, passScreen, placementBanner, rulesScreen } from './screens.js';
 import { el, qs } from './dom.js';
 
@@ -166,7 +166,10 @@ export function createApp(root) {
       hand: gameScreen.handEl,
       boardView: gameScreen.boardView,
     });
-    animator = createAnimator(gameScreen.boardView, { cards });
+    animator = createAnimator(gameScreen.boardView, {
+      cards,
+      onEnergy: ({ player, delta }) => gameScreen.animateEnergy(player, delta),
+    });
     render();
   }
 
