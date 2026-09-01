@@ -3,15 +3,10 @@
  * hot-seat, fin de partie, règles.
  */
 
-import { BALANCE, CARDS, CARD_CATEGORIES, INSTINCTS, BIOME_META, BIOME_LIST } from '../engine/index.js';
-import { GLYPHS, LOGO, cardArt } from './assets.js';
+import { BALANCE, CARDS, INSTINCTS, BIOME_META, BIOME_LIST } from '../engine/index.js';
+import { GLYPHS, LOGO } from './assets.js';
+import { cardFace } from './card-view.js';
 import { el } from './dom.js';
-
-const CATEGORIE_LABEL = {
-  [CARD_CATEGORIES.INSTINCT]: 'Instinct',
-  [CARD_CATEGORIES.BUFF]: 'Buff',
-  [CARD_CATEGORIES.TERRAIN]: 'Terrain',
-};
 
 /** Accueil : titre, nouvelle partie, reprise, règles. */
 export function homeScreen({ onStart, onResume, onRules, hasSave }) {
@@ -50,11 +45,7 @@ export function deckScreen({ player, onValidate }) {
         dataCategorie: card.category,
         onclick: (event) => toggle(card, event.currentTarget),
       },
-      el('span', { class: 'cout' }, card.cost),
-      el('i', { class: 'medaillon', html: cardArt(card) }),
-      el('span', { class: 'nom' }, card.name),
-      el('span', { class: 'texte' }, card.text),
-      el('span', { class: 'bande' }, CATEGORIE_LABEL[card.category])
+      ...cardFace(card, { bande: true })
     )
   );
 

@@ -89,3 +89,23 @@ Pages de mise au point, hors du jeu :
 Toutes les valeurs chiffrées sont centralisées dans `BALANCE`
 (`js/engine/constants.js`) : coûts, stats des créatures, durées d'effet,
 énergie, mort subite, contraintes de génération.
+
+Deux outils mesurent l'effet d'un réglage :
+
+```sh
+npm run sim         # parties complètes par actions légales aléatoires
+node tools/balance.mjs 40   # matrice instinct contre instinct, sans carte
+```
+
+La matrice isole la valeur d'une créature, mais elle mesure surtout la capacité
+à **engager** le combat : un instinct qui refuse d'attaquer la plupart des
+cibles (dominant, charognard) y perd par construction, et le fuyard, qui
+n'attaque jamais, y fait 0 %. Ce n'est pas un défaut d'équilibrage, c'est
+l'identité du jeu — ces créatures se jouent en appui, ce qu'un duel isolé ne
+sait pas mesurer.
+
+Le coût reflète donc l'initiative plutôt que la puissance brute : chasseur 4⚡,
+territorial et protecteur 3⚡, dominant et charognard 2⚡, fuyard 1⚡.
+
+Mode debug, dans l'inspecteur : affiche la vision de toutes les créatures et
+permet d'avancer d'un tour à vide.

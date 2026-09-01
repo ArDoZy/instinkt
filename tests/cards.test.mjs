@@ -90,11 +90,14 @@ describe('Ciblage', () => {
 describe('Manipulation des instincts', () => {
   it('reporte les PV au prorata, minimum 1', () => {
     const state = flatGame();
-    const c = put(state, 0, INSTINCTS.PROTECTEUR, 0, 0, { patch: { hp: 7 } }); // 7/14
+    // La moitié des PV d'un protecteur, reportée sur les PV max d'un chasseur.
+    const avant = BALANCE.creatures[INSTINCTS.PROTECTEUR].hp;
+    const apres = BALANCE.creatures[INSTINCTS.CHASSEUR].hp;
+    const c = put(state, 0, INSTINCTS.PROTECTEUR, 0, 0, { patch: { hp: avant / 2 } });
     play(state, 0, 'retour_instinct_primordial', { creatureId: c.id });
     equal(c.instinct, INSTINCTS.CHASSEUR);
-    equal(c.maxHp, 12);
-    equal(c.hp, 6, '12 × 7 / 14');
+    equal(c.maxHp, apres);
+    equal(c.hp, Math.round(apres / 2), 'PV reportés au prorata');
   });
 
   it('conserve les effets temporaires en cours', () => {

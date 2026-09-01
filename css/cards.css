@@ -6,9 +6,9 @@
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: 4px;
-  width: 132px;
-  min-height: 172px;
-  padding: 9px 9px 13px;
+  width: 124px;
+  min-height: 158px;
+  padding: 8px 8px 12px;
   text-align: left;
   color: var(--encre);
   background: var(--parchemin);
@@ -103,7 +103,7 @@
 
 /* --- Main ----------------------------------------------------------------- */
 
-.main { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; position: relative; }
+.main { display: flex; gap: 8px; align-items: flex-start; position: relative; min-width: 0; }
 .main[data-defausse] { box-shadow: 0 0 0 2px var(--sang); padding: 6px; }
 .main .consigne {
   position: absolute;
@@ -123,7 +123,7 @@
   text-transform: uppercase;
   color: var(--parchemin-faible);
 }
-.invocations .boutons { display: flex; gap: 6px; flex-wrap: wrap; }
+.invocations .boutons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 
 .invocation {
   display: grid;
@@ -131,8 +131,8 @@
   grid-template-areas: 'glyphe nom' 'glyphe cout';
   gap: 0 8px;
   align-items: center;
-  padding: 7px 10px;
-  min-width: 116px;
+  padding: 6px 9px;
+  min-width: 108px;
   text-align: left;
 }
 .invocation .glyphe-bouton { grid-area: glyphe; width: 20px; color: currentColor; }
@@ -150,4 +150,89 @@
 @media (prefers-reduced-motion: reduce) {
   .carte { transition: none; }
   .carte:hover:not(:disabled) { transform: none; }
+}
+
+/* --- Pile de pioche ------------------------------------------------------- */
+
+.pioche {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  flex: none;
+}
+.pioche .dos { width: 100%; }
+.pioche .dos svg { display: block; width: 100%; height: auto; }
+.pioche .nombre-pioche {
+  position: absolute;
+  bottom: -18px;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--parchemin-faible);
+}
+
+/* --- Cartes animées ------------------------------------------------------- */
+
+.couche-cartes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+  overflow: hidden;
+}
+
+.carte-animee {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 124px;
+  transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--sc, 1)) rotate(var(--rot, 0deg));
+  transform-origin: top left;
+  will-change: transform, opacity;
+}
+.carte-animee.en-vol {
+  transition:
+    transform calc(380ms * var(--anim)) cubic-bezier(0.3, 0.8, 0.3, 1),
+    opacity calc(320ms * var(--anim)) ease;
+}
+.carte-animee.se-dissout { filter: blur(1px); }
+
+/* Retournement dos → face à mi-parcours de la pioche. */
+.carte-animee.retourne { transform-style: preserve-3d; }
+.carte-animee.retourne .recto,
+.carte-animee.retourne .verso { backface-visibility: hidden; }
+.carte-animee.retourne .recto { width: 124px; }
+.carte-animee.retourne .recto svg { display: block; width: 100%; height: auto; }
+.carte-animee.retourne .verso { position: absolute; inset: 0; transform: rotateY(180deg); }
+.carte-animee.retourne.en-vol { animation: retourne calc(400ms * var(--anim)) ease-in-out; }
+@keyframes retourne {
+  0% { transform: translate(var(--tx), var(--ty)) scale(var(--sc)) rotateY(0deg); }
+  100% { transform: translate(var(--tx), var(--ty)) scale(var(--sc)) rotateY(180deg); }
+}
+
+.fantome-carte { pointer-events: none; }
+
+.trait-energie {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.trait-energie line {
+  stroke: var(--ambre);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  animation: file calc(600ms * var(--anim)) linear infinite;
+}
+@keyframes file { to { stroke-dashoffset: -22; } }
+
+/* Défausse forcée : les cartes s'étalent en éventail. */
+.main[data-defausse] .carte { transform: rotate(calc(var(--i, 0) * 5deg)); }
+.main[data-defausse] .carte:hover { transform: rotate(calc(var(--i, 0) * 5deg)) translateY(-8px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .carte-animee.en-vol { transition: none; animation: none; }
+  .trait-energie line { animation: none; }
+  .main[data-defausse] .carte { transform: none; }
 }

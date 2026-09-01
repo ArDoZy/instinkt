@@ -16,7 +16,8 @@ import {
   stats,
   summonOptions,
 } from '../engine/index.js';
-import { CARD_BACK, ENERGY_ICON, ENERGY_ICON_EMPTY, GLYPHS, cardArt } from './assets.js';
+import { ENERGY_ICON, ENERGY_ICON_EMPTY, GLYPHS } from './assets.js';
+import { cardBack, cardFace } from './card-view.js';
 import { createBoardView } from './board-view.js';
 import { el, qs, setChildren } from './dom.js';
 
@@ -49,12 +50,16 @@ export function createGameScreen(root, handlers) {
   const inspecteur = el('aside', { class: 'inspecteur' });
   const barre = el('footer', { class: 'bandeau joueur' });
 
+  // Couche où volent les cartes animées, au-dessus de tout le reste.
+  const coucheCartes = el('div', { class: 'couche-cartes' });
+
   const screen = el(
     'div',
     { class: 'ecran-partie' },
     adversaire,
     el('div', { class: 'aire' }, boardHost, inspecteur),
-    barre
+    barre,
+    coucheCartes
   );
   root.append(screen);
 
@@ -72,9 +77,9 @@ export function createGameScreen(root, handlers) {
       el(
         'div',
         { class: 'dos-cartes', title: `${player.hand.length} carte(s) en main` },
-        ...player.hand.map(() => el('i', { class: 'dos', html: CARD_BACK }))
+        ...player.hand.map(() => cardBack())
       ),
-      el('span', { class: 'compteur' }, `${countCreatures(state, id)} créature(s)`),
+      el('span', { class: 'compteur' }, pluriel(countCreatures(state, id), 'créature')),
       ui.debug ? el('span', { class: 'etiquette-debug' }, 'DEBUG') : null
     );
   }
@@ -219,7 +224,18 @@ export function createGameScreen(root, handlers) {
           'Fin de tour'
         )
       ),
-      el('div', { class: 'ligne-basse' }, main(state, ui), invocations(state, ui))
+      el('div', { class: 'ligne-basse' }, pioche(state), main(state, ui), invocations(state, ui))
+    );
+  }
+
+  /** Pile de pioche : point de départ et d'arrivée des animations de carte. */
+  function pioche(state) {
+    const player = state.players[state.activePlayer];
+    return el(
+      'div',
+      { class: 'pioche', title: `${player.draw.length} carte(s) dans la pioche` },
+      cardBack(),
+      el('span', { class: 'nombre-pioche' }, player.draw.length)
     );
   }
 
@@ -232,26 +248,23 @@ export function createGameScreen(root, handlers) {
       'div',
       { class: 'main', dataDefausse: enDefausse ? '' : null },
       enDefausse ? el('p', { class: 'consigne' }, 'Main pleine : défaussez une carte.') : null,
-      ...jouables.map((entry) => {
+      ...jouables.map((entry, i) => {
         const card = entry.card;
-        const actif = ui.pendingCard === entry.cardId;
         return el(
           'button',
           {
             class: 'carte',
             type: 'button',
             dataCategorie: card.category,
-            dataActive: actif ? '' : null,
+            dataActive: ui.pendingCard === entry.cardId ? '' : null,
             disabled: !enDefausse && !entry.legal,
             title: entry.legal || enDefausse ? card.text : raisonRefus(entry, state),
+            style: { '--i': i - (jouables.length - 1) / 2 },
             onclick: () => (enDefausse ? handlers.onDiscard(entry.cardId) : handlers.onCardClick(entry.cardId)),
             onmouseenter: () => handlers.onCardHover(entry.cardId),
             onmouseleave: () => handlers.onCardHover(null),
           },
-          el('span', { class: 'cout' }, card.cost),
-          el('i', { class: 'medaillon', html: cardArt(card) }),
-          el('span', { class: 'nom' }, card.name),
-          el('span', { class: 'texte' }, card.text)
+          ...cardFace(card)
         );
       }),
       ...Array.from({ length: BALANCE.hand.max - player.hand.length }, () => el('div', { class: 'carte vide' }))
@@ -314,6 +327,8 @@ export function createGameScreen(root, handlers) {
     );
   }
 
+  const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+
   const countCreatures = (state, player) =>
     state.creatures.filter((c) => c.owner === player && c.hp > 0).length;
 
@@ -330,6 +345,10 @@ export function createGameScreen(root, handlers) {
       renderInspecteur(state, ui);
       renderBarre(state, ui);
     },
+    /** Éléments dont les animations de carte ont besoin. */
+    coucheCartes,
+    pileEl: () => qs('.pioche', barre),
+    handEl: () => qs('.main', barre),
     setTimer(seconds, urgent) {
       const chrono = qs('.chrono', barre);
       if (!chrono) return;

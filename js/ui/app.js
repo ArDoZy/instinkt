@@ -24,6 +24,7 @@ import {
   squareCells,
 } from '../engine/index.js';
 import { createAnimator } from './animator.js';
+import { createCardAnimator } from './card-animator.js';
 import { createGameScreen } from './game-screen.js';
 import { allVisionsPreview, areaPreview, cardPreview, creaturePreview, summonPreview } from './preview.js';
 import { deckScreen, gameOverScreen, homeScreen, passScreen, placementBanner, rulesScreen } from './screens.js';
@@ -48,6 +49,8 @@ export function createApp(root) {
   let chrono = null;
   /** Instantané d'avant la dernière résolution, pour le bouton « rejouer ». */
   let replay = null;
+  /** Fin de tour réclamée pendant une animation : elle part dès qu'elle finit. */
+  let finDeTourEnAttente = false;
 
   const ui = {
     selectedId: null,
@@ -157,7 +160,13 @@ export function createApp(root) {
     couches.ecran.replaceChildren();
     couches.overlay.replaceChildren();
     gameScreen = createGameScreen(couches.ecran, handlers);
-    animator = createAnimator(gameScreen.boardView);
+    const cards = createCardAnimator({
+      layer: gameScreen.coucheCartes,
+      pile: gameScreen.pileEl,
+      hand: gameScreen.handEl,
+      boardView: gameScreen.boardView,
+    });
+    animator = createAnimator(gameScreen.boardView, { cards });
     render();
   }
 
@@ -236,6 +245,12 @@ export function createApp(root) {
     if (snapshot) replay = { before, events };
     persist();
 
+    if (finDeTourEnAttente && !snapshot && state.winner === null) {
+      finDeTourEnAttente = false;
+      return endTurn();
+    }
+    finDeTourEnAttente = false;
+
     // Le placement enchaîne sur le joueur suivant, puis sur la première manche.
     if (action.type === ACTIONS.PLACE_STARTER) return beginPlacement();
     if (state.winner !== null) return showGameOver();
@@ -244,6 +259,12 @@ export function createApp(root) {
   }
 
   function endTurn() {
+    // Le chrono peut expirer pendant une animation : la fin de tour attend
+    // alors qu'elle se termine plutôt que d'être perdue.
+    if (ui.busy) {
+      finDeTourEnAttente = true;
+      return;
+    }
     stopChrono();
     dispatch({ type: ACTIONS.END_TURN, player: state.activePlayer }, { snapshot: true });
   }

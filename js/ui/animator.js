@@ -87,6 +87,12 @@ export function createAnimator(boardView, hooks = {}) {
         return animateInstinct(payloads, state);
       case 'biomeChange':
         return animateBiome(payloads, state);
+      case 'draw':
+        return hooks.cards ? hooks.cards.draw(payloads[0].cardId) : delay(TIMINGS.pause);
+      case 'playCard':
+        return hooks.cards ? hooks.cards.play(payloads[0].cardId, payloads[0].target) : delay(TIMINGS.pause);
+      case 'discard':
+        return hooks.cards ? hooks.cards.discard(payloads[0].cardId) : delay(TIMINGS.pause);
       case 'lure':
         boardView.render(state);
         return delay(TIMINGS.pause);
