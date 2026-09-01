@@ -17,7 +17,7 @@ import {
   idx,
   halfOfCell,
   cellName,
-} from '../engine/index.js';
+} from '../js/engine/index.js';
 
 const $ = (sel) => document.querySelector(sel);
 const plateau = $('#plateau');

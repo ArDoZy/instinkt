@@ -1,4 +1,4 @@
-/* Harnais de mise au point du palier 1 — sobre, sur fond encre (§8). */
+/* Harnais de mise au point de la génération — sobre, sur fond encre (§8). */
 
 * { box-sizing: border-box; }
 
@@ -182,3 +182,5 @@ pre {
 @media (max-width: 760px) {
   .contenu { grid-template-columns: minmax(0, 1fr); }
 }
+
+.sous-titre a { color: var(--ambre); }

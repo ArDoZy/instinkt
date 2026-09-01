@@ -26,7 +26,6 @@ const byId = (a, b) => a.id - b.id;
  */
 function planMove(state, creature, blockedFor) {
   const decision = decide(state, creature);
-  creature.protectingId = decision && decision.protecting ? decision.targetId : null;
 
   if (!decision) return { creature, decision, destination: creature.cell, path: [] };
 
@@ -119,6 +118,10 @@ export function resolveMovement(state) {
   };
 
   const plans = movers.map((creature) => planMove(state, creature, blockedFor));
+  // Le protégé courant est redésigné à chaque phase (§6.5).
+  for (const plan of plans) {
+    plan.creature.protectingId = plan.decision && plan.decision.protecting ? plan.decision.targetId : null;
+  }
 
   // Conflits : deux créatures visant la même case. Les cases occupées au début
   // de la phase étant bloquées pour tout le monde, une destination n'est jamais
@@ -154,6 +157,23 @@ export function resolveMovement(state) {
   }
 
   return plans;
+}
+
+/**
+ * Intention de déplacement d'une seule créature, sans rien modifier — c'est ce
+ * que la vue affiche en prévisualisation. Les conflits de case dépendant des
+ * autres créatures, la case annoncée est celle que la créature *vise* ; elle
+ * peut rester sur place si une autre lui prend la place (§4).
+ */
+export function previewMove(state, creature) {
+  const staticBlocked = blockedCells(state);
+  const blockedFor = (c) => {
+    const blocked = new Set(staticBlocked);
+    blocked.delete(c.cell);
+    return blocked;
+  };
+  const plan = planMove(state, creature, blockedFor);
+  return { decision: plan.decision, destination: plan.destination, path: plan.path };
 }
 
 /** Départage des conflits de case : joueur actif, puis vitesse, puis id (§4). */
