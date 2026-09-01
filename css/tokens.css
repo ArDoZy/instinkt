@@ -1,0 +1,45 @@
+/* Jetons de design INSTYNKT — palette, typographie, espacements.
+   Aucune règle de composant ici. */
+
+:root {
+  /* Palette (§8) */
+  --encre: #1b1f1a;
+  --parchemin: #e8e2d2;
+  --mousse: #5c7a52;
+  --jungle: #2f5240;
+  --herbe: #a3b26b;
+  --sable: #d9b679;
+  --roche: #6e6a66;
+  --sang: #a63a2e;
+  --azur: #3b6e8f;
+  --ambre: #e0a63c;
+
+  /* Dérivés d'interface — jamais sang ni azur : ces deux couleurs ne
+     signifient que l'appartenance à un joueur. */
+  --encre-clair: #262b24;
+  --encre-trait: #3a4038;
+  --parchemin-attenue: rgba(232, 226, 210, 0.62);
+  --parchemin-faible: rgba(232, 226, 210, 0.32);
+
+  /* Biomes */
+  --biome-foret: var(--mousse);
+  --biome-jungle: var(--jungle);
+  --biome-plaine: var(--herbe);
+  --biome-desert: var(--sable);
+  --biome-montagne: var(--roche);
+
+  /* Typographie */
+  --font-display: 'Oswald', 'Archivo Narrow', 'Helvetica Neue', sans-serif;
+  --font-corps: 'Inter', 'Source Sans 3', system-ui, sans-serif;
+
+  --pas: 4px;
+  --rayon-case: 2px;
+  --trait-region: 2px;
+
+  /* Multiplicateur global de durée d'animation (0 = instantané). */
+  --anim: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --anim: 0; }
+}
