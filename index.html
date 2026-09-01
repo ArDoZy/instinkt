@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Instynkt — palier 1 : moteur</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Oswald:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/dev.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>INSTYNKT</h1>
+        <p class="sous-titre">
+          Palier 1 — moteur pur : PRNG seedé, génération de plateau, régions de biome.
+          Aucune logique de jeu dans cette page : elle ne fait que lire le moteur.
+        </p>
+      </header>
+
+      <div class="contenu">
+        <div>
+          <div class="plateau" id="plateau" data-regions="off"></div>
+          <pre id="ascii"></pre>
+        </div>
+
+        <aside>
+          <section class="panneau">
+            <h2>Plateau</h2>
+            <div id="stats"></div>
+            <div class="champs">
+              <input id="seed" type="number" min="0" step="1" aria-label="Graine" />
+              <button id="regenerer" type="button">Regénérer</button>
+            </div>
+            <label class="ligne" style="margin-top: 8px">
+              <span>Afficher les régions</span>
+              <input id="regions" type="checkbox" />
+            </label>
+          </section>
+
+          <section class="panneau" style="margin-top: 16px">
+            <h2>Biomes</h2>
+            <div class="legende" id="legende"></div>
+          </section>
+
+          <section class="panneau" style="margin-top: 16px">
+            <h2>State</h2>
+            <p id="etat" style="margin: 0; color: var(--parchemin-attenue)"></p>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script type="module" src="js/ui/dev-board.js"></script>
+  </body>
+</html>

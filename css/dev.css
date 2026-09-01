@@ -1,0 +1,184 @@
+/* Harnais de mise au point du palier 1 — sobre, sur fond encre (§8). */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--encre);
+  color: var(--parchemin);
+  font-family: var(--font-corps);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: calc(var(--pas) * 8);
+  display: flex;
+  justify-content: center;
+}
+
+.page { width: min(980px, 100%); }
+
+header { border-bottom: 1px solid var(--encre-trait); padding-bottom: calc(var(--pas) * 4); }
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  font-size: 28px;
+  margin: 0;
+}
+
+.sous-titre { color: var(--parchemin-attenue); margin: calc(var(--pas)) 0 0; }
+
+.contenu {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: calc(var(--pas) * 8);
+  margin-top: calc(var(--pas) * 8);
+  align-items: start;
+}
+
+/* --- Grille --------------------------------------------------------- */
+
+.plateau {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  aspect-ratio: 1;
+  background: var(--encre);
+  border: 1px solid var(--encre-trait);
+}
+
+.case {
+  position: relative;
+  border-radius: var(--rayon-case);
+  outline: 1px solid rgba(27, 31, 26, 0.35);
+  outline-offset: -1px;
+}
+
+/* Textures de biome : hachures, points, granulé — pas de dégradé (§8). */
+.case[data-biome='foret'] {
+  background-color: var(--biome-foret);
+  background-image: repeating-linear-gradient(45deg, rgba(27, 31, 26, 0.22) 0 1px, transparent 1px 6px);
+}
+.case[data-biome='jungle'] {
+  background-color: var(--biome-jungle);
+  background-image: repeating-linear-gradient(45deg, rgba(27, 31, 26, 0.3) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-45deg, rgba(232, 226, 210, 0.08) 0 1px, transparent 1px 7px);
+}
+.case[data-biome='plaine'] {
+  background-color: var(--biome-plaine);
+  background-image: repeating-linear-gradient(90deg, rgba(27, 31, 26, 0.16) 0 1px, transparent 1px 8px);
+}
+.case[data-biome='desert'] {
+  background-color: var(--biome-desert);
+  background-image: radial-gradient(rgba(27, 31, 26, 0.25) 1px, transparent 1px);
+  background-size: 7px 7px;
+}
+.case[data-biome='montagne'] {
+  background-color: var(--biome-montagne);
+  background-image: repeating-linear-gradient(135deg, rgba(27, 31, 26, 0.4) 0 2px, transparent 2px 6px);
+}
+
+/* Frontières de région : trait d'encre appuyé. */
+.case[data-bord-haut] { box-shadow: inset 0 var(--trait-region) 0 0 var(--encre); }
+.case[data-bord-bas] { box-shadow: inset 0 calc(-1 * var(--trait-region)) 0 0 var(--encre); }
+.case[data-bord-haut][data-bord-bas] {
+  box-shadow: inset 0 var(--trait-region) 0 0 var(--encre), inset 0 calc(-1 * var(--trait-region)) 0 0 var(--encre);
+}
+.case[data-bord-gauche]::before,
+.case[data-bord-droit]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--trait-region);
+  background: var(--encre);
+}
+.case[data-bord-gauche]::before { left: 0; }
+.case[data-bord-droit]::after { right: 0; }
+
+.mediane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--parchemin-faible);
+  pointer-events: none;
+}
+
+.etiquette-region {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--encre);
+  opacity: 0;
+}
+.plateau[data-regions='on'] .etiquette-region { opacity: 0.75; }
+
+/* --- Panneau -------------------------------------------------------- */
+
+.panneau {
+  border: 1px solid var(--encre-trait);
+  background: var(--encre-clair);
+  padding: calc(var(--pas) * 4);
+}
+
+.panneau h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--parchemin-attenue);
+  margin: 0 0 calc(var(--pas) * 3);
+}
+
+.ligne { display: flex; justify-content: space-between; gap: var(--pas); padding: 2px 0; }
+.ligne dt { color: var(--parchemin-attenue); }
+.ligne dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.champs { display: flex; gap: var(--pas); margin-top: calc(var(--pas) * 3); }
+
+input[type='number'] {
+  flex: 1;
+  min-width: 0;
+  background: var(--encre);
+  border: 1px solid var(--encre-trait);
+  color: var(--parchemin);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: calc(var(--pas) * 1.5);
+}
+
+button {
+  background: transparent;
+  border: 1px solid var(--parchemin-faible);
+  color: var(--parchemin);
+  font: inherit;
+  letter-spacing: 0.04em;
+  padding: calc(var(--pas) * 1.5) calc(var(--pas) * 3);
+  cursor: pointer;
+}
+button:hover { border-color: var(--ambre); color: var(--ambre); }
+
+.legende { display: grid; gap: 2px; margin-top: calc(var(--pas) * 3); }
+.legende span { display: flex; align-items: center; gap: var(--pas); color: var(--parchemin-attenue); }
+.pastille { width: 12px; height: 12px; border-radius: var(--rayon-case); }
+
+pre {
+  margin: calc(var(--pas) * 4) 0 0;
+  padding: calc(var(--pas) * 3);
+  border: 1px solid var(--encre-trait);
+  background: var(--encre-clair);
+  color: var(--parchemin-attenue);
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+@media (max-width: 760px) {
+  .contenu { grid-template-columns: minmax(0, 1fr); }
+}
