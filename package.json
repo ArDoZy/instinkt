@@ -5,9 +5,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "python3 -m http.server 8000 --bind 0.0.0.0",
+    "serve": "python3 -m http.server 8000 --bind 0.0.0.0",
     "test": "node tests/engine.test.mjs",
-    "stats": "node tools/board-stats.mjs",
-    "serve": "python3 -m http.server 8000"
+    "stats": "node tools/board-stats.mjs"
   },
   "license": "UNLICENSED"
 }

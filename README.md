@@ -10,13 +10,18 @@ il invoque, modifie les instincts, transforme le terrain, buffe et débuffe.
 ## Lancer
 
 ```sh
+npm run dev       # sert la racine sur http://localhost:8000 (alias : npm run serve)
 npm test          # tests du moteur (node, sans dépendance)
 npm run stats     # statistiques de génération de plateau
-npm run serve     # sert la racine sur http://localhost:8000
 ```
 
-Le jeu se joue dans le navigateur : ouvrir `index.html` via un serveur local
-(les modules ES6 ne se chargent pas depuis `file://`).
+Le jeu se joue dans le navigateur, **via un serveur local** : ouvrir `index.html`
+en `file://` ne marche pas, le navigateur bloque les modules ES6.
+
+Dans un Codespace ou un conteneur, `npm run dev` écoute sur `0.0.0.0:8000` ;
+GitHub propose alors le port 8000 dans l'onglet **Ports**, il suffit d'ouvrir
+l'URL transférée. Aucune installation n'est nécessaire (pas de `node_modules`,
+le serveur est celui de Python).
 
 ## Architecture
 
