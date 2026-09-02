@@ -4,7 +4,8 @@
 > soit en version définitive (glyphes, textures, icônes), soit en placeholder
 > géométrique jouable (silhouettes, médaillons, dos de carte, logo). Le jeu est
 > complet et lisible tel quel ; les 25 fichiers de la liste « à fournir » sont
-> des remplacements, pas des manques bloquants.
+> des remplacements, pas des manques bloquants. Les prompts prêts à coller pour
+> les obtenir sont dans [`PROMPTS-ASSETS.md`](PROMPTS-ASSETS.md).
 
 Colonne **Source** :
 
