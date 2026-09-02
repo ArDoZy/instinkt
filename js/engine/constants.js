@@ -141,13 +141,13 @@ export const BALANCE = {
   creatures: {
     // Le Roi n'est pas invocable : chaque joueur pose le sien avant la partie.
     [INSTINCTS.ROI]: { cost: 0, hp: 55, atk: 8, speed: 1, vision: 4 },
-    [INSTINCTS.PROTECTEUR]: { cost: 3, hp: 14, atk: 2, speed: 1, vision: 3 },
+    [INSTINCTS.PROTECTEUR]: { cost: 2, hp: 14, atk: 2, speed: 1, vision: 3 },
     // Le territorial voit sa région + son halo ; `vision` n'est pas utilisée.
-    [INSTINCTS.TERRITORIAL]: { cost: 3, hp: 13, atk: 3, speed: 1, vision: 0 },
-    [INSTINCTS.CHASSEUR]: { cost: 4, hp: 11, atk: 4, speed: 2, vision: 5 },
+    [INSTINCTS.TERRITORIAL]: { cost: 2, hp: 13, atk: 3, speed: 1, vision: 0 },
+    [INSTINCTS.CHASSEUR]: { cost: 3, hp: 11, atk: 4, speed: 2, vision: 5 },
     // Le tueur de Roi sait toujours où est le Roi adverse ; sa vision ne sert
     // qu'à percevoir ce qui l'entoure.
-    [INSTINCTS.TUEUR_DE_ROI]: { cost: 3, hp: 8, atk: 6, speed: 2, vision: 3 },
+    [INSTINCTS.TUEUR_DE_ROI]: { cost: 2, hp: 8, atk: 6, speed: 2, vision: 3 },
     // État de panique, jamais invoqué.
     [INSTINCTS.FUYARD]: { cost: 1, hp: 6, atk: 0, speed: 2, vision: 3 },
   },
@@ -159,7 +159,6 @@ export const BALANCE = {
   durations: {
     obsession: null,
     paniqueCollective: 2,
-    hierarchieBrisee: 2,
     frenesie: 2,
     appat: 2,
     luneDeSang: 3,
@@ -242,14 +241,6 @@ export const CARDS = [
     category: CARD_CATEGORIES.INSTINCT,
     target: 'area2x2',
     text: 'Les ennemis du carré 2×2 paniquent pendant 2 tours.',
-  },
-  {
-    id: 'hierarchie_brisee',
-    name: 'Hiérarchie Brisée',
-    cost: 3,
-    category: CARD_CATEGORIES.INSTINCT,
-    target: 'global',
-    text: 'Pendant 2 tours, les créatures adverses frappent aussi leurs alliées.',
   },
   {
     id: 'frenesie',

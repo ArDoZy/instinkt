@@ -73,7 +73,7 @@ en encre sur la teinte du biome — jamais de dégradé (§8).
 
 *(Implémentées en CSS dans `css/board.css`.)*
 
-## 4. Illustrations de carte (16)
+## 4. Illustrations de carte (15)
 
 Médaillon en haut de la carte, style planche de naturaliste : trait d'encre sur
 parchemin, pas d'aplat de couleur vive.
@@ -85,7 +85,6 @@ parchemin, pas d'aplat de couleur vive.
 | `carte-terrain_sacre.svg` | SVG | 160×120 | Cercle de pierres levées sur un sol hachuré | placeholder → à fournir | confort |
 | `carte-obsession.svg` | SVG | 160×120 | Deux silhouettes reliées par un fil tendu | placeholder → à fournir | confort |
 | `carte-panique_collective.svg` | SVG | 160×120 | Nuée d'oiseaux jaillissant d'un carré | placeholder → à fournir | confort |
-| `carte-hierarchie_brisee.svg` | SVG | 160×120 | Bois de cerf fendu en deux | placeholder → à fournir | confort |
 | `carte-frenesie.svg` | SVG | 160×120 | Gueule ouverte, traits de vitesse | placeholder → à fournir | confort |
 | `carte-appat.svg` | SVG | 160×120 | Carcasse posée au centre d'un cercle de traces | placeholder → à fournir | confort |
 | `carte-lune_de_sang.svg` | SVG | 160×120 | Disque lunaire plein, hachuré | placeholder → à fournir | confort |
@@ -131,8 +130,8 @@ parchemin, pas d'aplat de couleur vive.
 
 - **Rien de bloquant n'est à fournir** : tout ce qui l'est est généré par le moteur
   ou remplacé par un placeholder géométrique jouable.
-- **À fournir pour la finition** : les 6 silhouettes de créature, les 16 médaillons
-  de carte, le dos de pioche, le logo et le favicon — soit **25 fichiers**.
+- **À fournir pour la finition** : les 6 silhouettes de créature, les 15 médaillons
+  de carte, le dos de pioche, le logo et le favicon — soit **24 fichiers**.
 - Le plateau fait 16×16 : une silhouette est rendue autour de 38 px de côté en
   1440×900. Elle doit rester lisible à cette taille — c'est le glyphe qui porte
   l'identité, la silhouette ne fait que donner la masse et la posture.

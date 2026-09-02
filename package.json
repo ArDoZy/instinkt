@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "python3 -m http.server 8000 --bind 0.0.0.0",
-    "serve": "python3 -m http.server 8000 --bind 0.0.0.0",
+    "dev": "node tools/serve.mjs",
+    "serve": "node tools/serve.mjs",
     "test": "node tests/engine.test.mjs && node tests/instincts.test.mjs && node tests/cards.test.mjs",
     "stats": "node tools/board-stats.mjs",
     "sim": "node tools/simulate.mjs"

@@ -339,9 +339,9 @@ describe('Tables d’équilibrage', () => {
     }
   });
 
-  it('contient 16 cartes aux identifiants uniques', () => {
-    equal(CARDS.length, 16);
-    equal(new Set(CARDS.map((c) => c.id)).size, 16);
+  it('a des identifiants de carte uniques', () => {
+    assert(CARDS.length >= BALANCE.deck.size, 'de quoi construire un deck');
+    equal(new Set(CARDS.map((c) => c.id)).size, CARDS.length);
     for (const c of CARDS) {
       assert(c.cost >= 1 && c.cost <= BALANCE.energy.max, `coût invalide: ${c.id}`);
       assert(typeof c.target === 'string' && c.text.length > 0, `carte incomplète: ${c.id}`);

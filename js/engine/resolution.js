@@ -207,10 +207,6 @@ export function isValidPrey(state, attacker, other) {
   // Une créature paniquée n'attaque plus rien.
   if (attacker.instinct === INSTINCTS.FUYARD) return false;
 
-  // Hiérarchie Brisée : n'importe quelle voisine, alliée comprise, et sans
-  // égard pour les restrictions d'instinct (§5).
-  if (globalFor(state, GLOBALS.HIERARCHIE_BRISEE, attacker)) return true;
-
   // Le tueur de Roi ne frappe que le Roi adverse.
   if (isRegicide(attacker)) return other.owner !== attacker.owner && isKing(other);
 
