@@ -16,6 +16,7 @@ qui donne à la partie un sens de progression plutôt qu'un cycle.
 
 ```sh
 npm run dev       # sert la racine sur http://localhost:8000 (alias : npm run serve)
+npm run dev 3000  # sur un autre port
 npm test          # tests du moteur (node, sans dépendance)
 npm run stats     # statistiques de génération de plateau
 ```
@@ -23,10 +24,12 @@ npm run stats     # statistiques de génération de plateau
 Le jeu se joue dans le navigateur, **via un serveur local** : ouvrir `index.html`
 en `file://` ne marche pas, le navigateur bloque les modules ES6.
 
-Dans un Codespace ou un conteneur, `npm run dev` écoute sur `0.0.0.0:8000` ;
-GitHub propose alors le port 8000 dans l'onglet **Ports**, il suffit d'ouvrir
-l'URL transférée. Aucune installation n'est nécessaire (pas de `node_modules`,
-le serveur est celui de Python).
+Le serveur (`tools/serve.mjs`) tient en un fichier Node sans dépendance. Si le
+port est déjà occupé — un terminal laissé ouvert, par exemple — il prend le
+suivant et l'annonce, plutôt que de s'arrêter sur `EADDRINUSE`. Dans un
+Codespace il écoute sur `0.0.0.0` : GitHub propose alors le port dans l'onglet
+**Ports**, il suffit d'ouvrir l'URL transférée. Aucune installation n'est
+nécessaire, il n'y a pas de `node_modules`.
 
 ## Architecture
 
