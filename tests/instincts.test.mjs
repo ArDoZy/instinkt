@@ -176,6 +176,34 @@ describe('Territorial', () => {
     equal(posOf(terri), '2,2', 'et reste dans sa zone');
   });
 
+  it('ne sort pas de sa zone même sous Obsession', () => {
+    const state = flatGame();
+    const zone = [at(2, 2), at(2, 3), at(3, 2), at(3, 3)];
+    const terri = put(state, 1, INSTINCTS.TERRITORIAL, 2, 2, { zone });
+    const proie = put(state, 0, INSTINCTS.PROTECTEUR, 9, 9);
+    addEffect(terri, {
+      kind: EFFECTS.OBSESSION,
+      caster: 0,
+      remaining: null,
+      targetId: proie.id,
+      previousInstinct: INSTINCTS.TERRITORIAL,
+      previousZone: zone,
+    });
+    // La traque change sa cible, pas son périmètre.
+    equal(decide(state, terri).targetId, proie.id);
+    for (let i = 0; i < 6; i++) resolveMovement(state);
+    assert(zone.includes(terri.cell), `sorti de sa zone : ${posOf(terri)}`);
+  });
+
+  it('rentre chez lui s’il en a été éjecté par une Poussée Volcanique', () => {
+    const state = flatGame();
+    const zone = [at(2, 2), at(2, 3)];
+    const terri = put(state, 0, INSTINCTS.TERRITORIAL, 6, 6, { zone });
+    const avant = dist(terri.cell, at(2, 2));
+    resolveMovement(state);
+    assert(dist(terri.cell, at(2, 2)) < avant, 'il se rapproche de sa zone');
+  });
+
   it('sa zone reste un ensemble de cases même si le biome change', () => {
     const state = flatGame();
     const zone = [at(2, 2), at(3, 2)];
@@ -328,20 +356,14 @@ describe('Tueur de Roi', () => {
     equal(decide(state, tueur), null);
   });
 
-  it('sous Hiérarchie Brisée, frappe n’importe quelle voisine, alliée comprise', () => {
+  it('ne frappe pas non plus ses alliés', () => {
     const state = flatGame();
     const tueur = put(state, 1, INSTINCTS.TUEUR_DE_ROI, 3, 3);
     const allie = put(state, 1, INSTINCTS.PROTECTEUR, 4, 3);
     put(state, 0, INSTINCTS.ROI, 15, 15);
-    state.globalEffects.push({
-      kind: GLOBALS.HIERARCHIE_BRISEE,
-      caster: 0,
-      remaining: 2,
-      creatureIds: [tueur.id, allie.id],
-    });
-    equal(isValidPrey(state, tueur, allie), true);
+    equal(isValidPrey(state, tueur, allie), false);
     combat(state);
-    assert(allie.hp < allie.maxHp, 'il frappe son allié');
+    equal(allie.hp, allie.maxHp);
   });
 });
 
@@ -481,13 +503,13 @@ describe('Obsession et Appât', () => {
     deepEqual(decide(state, chasseur), { kind: 'cell', cell: at(5, 3) });
   });
 
-  it('l’Appât sort un Territorial de sa zone', () => {
+  it('ne sort pas un Territorial de sa zone', () => {
     const state = flatGame();
-    const zone = [at(2, 2)];
+    const zone = [at(2, 2), at(2, 3)];
     const terri = put(state, 0, INSTINCTS.TERRITORIAL, 2, 2, { zone });
-    state.players[1].lure = { cell: at(3, 2), remaining: 2, caster: 1 };
+    state.players[1].lure = { cell: at(5, 2), remaining: 2, caster: 1 };
     resolveMovement(state);
-    equal(posOf(terri), '3,2', 'les effets priment sur la contrainte de zone');
+    assert(zone.includes(terri.cell), `resté dans sa zone : ${posOf(terri)}`);
   });
 });
 

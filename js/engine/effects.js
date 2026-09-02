@@ -23,7 +23,6 @@ export const EFFECTS = /** @type {const} */ ({
 /** Effets globaux. */
 export const GLOBALS = /** @type {const} */ ({
   LUNE_DE_SANG: 'luneDeSang',
-  HIERARCHIE_BRISEE: 'hierarchieBrisee',
   BROUILLARD: 'brouillardEpais',
   ECAILLE_DE_PIERRE: 'ecailleDePierre',
 });

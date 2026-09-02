@@ -164,10 +164,6 @@ export function applyCard(state, player, cardId, target = {}) {
       break;
     }
 
-    case 'hierarchie_brisee':
-      addGlobal(state, GLOBALS.HIERARCHIE_BRISEE, player, enemiesOf(state, player), D.hierarchieBrisee);
-      break;
-
     case 'frenesie':
       addEffect(creature, { kind: EFFECTS.FRENESIE, caster: player, remaining: D.frenesie });
       break;

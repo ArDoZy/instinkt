@@ -82,14 +82,20 @@ const INSTINCT_ALGORITHMS = {
   },
 
   /**
-   * Ne sort jamais de sa zone. Sa vision est sa zone plus le halo qui la borde,
-   * ce dont visibleCells se charge. Hors de sa zone (Obsession ou Appât passés),
-   * il n'a qu'un objectif : y revenir (§6.7).
+   * Ne sort jamais de sa zone : la contrainte est absolue, rien ne la lève, pas
+   * même une Obsession ou un Appât — ceux-ci changent sa cible, pas son
+   * périmètre. Sa vision est sa zone plus le halo qui la borde, ce dont
+   * visibleCells se charge.
+   *
+   * Le seul cas où il peut se retrouver dehors est une Poussée Volcanique qui
+   * l'éjecte d'une partie de sa zone : il n'a alors qu'un objectif, y rentrer.
    */
   [INSTINCTS.TERRITORIAL](state, creature) {
     if (creature.zone && !creature.zone.includes(creature.cell)) {
-      const home = creature.zone.slice().sort((a, b) => dist(creature.cell, a) - dist(creature.cell, b) || a - b);
-      return home.length ? { ...seek(home[0]), returning: true } : idle();
+      const retour = creature.zone
+        .slice()
+        .sort((a, b) => dist(creature.cell, a) - dist(creature.cell, b) || a - b);
+      return retour.length ? { ...seek(retour[0]), returning: true } : idle();
     }
     const prey = nearest(creature.cell, visibleEnemies(state, creature));
     return prey ? chase(prey) : idle();
@@ -135,19 +141,22 @@ const INSTINCT_ALGORITHMS = {
  */
 export function goalCells(state, creature, decision, blocked) {
   if (!decision) return [];
+
+  // Le Territorial ne peut arriver que sur une case de sa zone — sauf quand il
+  // y rentre, justement, après en avoir été éjecté.
+  const zone =
+    creature.instinct === INSTINCTS.TERRITORIAL && creature.zone && !decision.returning
+      ? new Set(creature.zone)
+      : null;
+  const autorisee = (cell) => !blocked.has(cell) && (!zone || zone.has(cell));
+
   if (decision.kind === 'cell') {
-    return blocked.has(decision.cell) ? [] : [decision.cell];
+    return autorisee(decision.cell) ? [decision.cell] : [];
   }
   if (decision.kind === 'creature') {
     const prey = creatureById(state, decision.targetId);
     if (!prey) return [];
-    let cells = neighbors8(prey.cell).filter((c) => !blocked.has(c));
-    // Le Territorial ne sort jamais de sa zone (§4).
-    if (creature.instinct === INSTINCTS.TERRITORIAL && creature.zone) {
-      const zone = new Set(creature.zone);
-      cells = cells.filter((c) => zone.has(c));
-    }
-    return cells;
+    return neighbors8(prey.cell).filter(autorisee);
   }
   return [];
 }
