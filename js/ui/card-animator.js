@@ -6,7 +6,7 @@
  * mouvement entre deux états.
  */
 
-import { CARDS_BY_ID } from '../engine/index.js';
+import { CARDS_BY_ID, W } from '../engine/index.js';
 import { cardBack, cardGhost } from './card-view.js';
 import { el, reducedMotion } from './dom.js';
 
@@ -103,7 +103,7 @@ export function createCardAnimator({ layer, pile, hand, boardView }) {
     if (typeof target.creatureId === 'number') {
       const node = boardView.creatureEl(target.creatureId);
       if (!node) return null;
-      return Number(node.style.getPropertyValue('--y')) * 8 + Number(node.style.getPropertyValue('--x'));
+      return Number(node.style.getPropertyValue('--y')) * W + Number(node.style.getPropertyValue('--x'));
     }
     return null;
   }

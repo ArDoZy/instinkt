@@ -7,6 +7,11 @@ Particularité : **on ne déplace jamais ses créatures**. Chacune obéit à un
 instinct — un algorithme simple et prévisible. Le joueur agit indirectement :
 il invoque, modifie les instincts, transforme le terrain, buffe et débuffe.
 
+Chaque joueur pose un **Roi** avant la partie, et gagne en tuant celui d'en
+face. Le Roi fuit le combat, ne riposte que si on le frappe, et **ne se
+régénère jamais** : chaque point de vie qu'on lui prend est acquis. C'est ce
+qui donne à la partie un sens de progression plutôt qu'un cycle.
+
 ## Lancer
 
 ```sh
@@ -29,7 +34,7 @@ le serveur est celui de Python).
 js/engine/       moteur pur, déterministe, zéro accès au DOM
   prng.js          PRNG mulberry32 seedé, état sérialisable
   constants.js     BALANCE, biomes, instincts, les 16 cartes
-  geometry.js      grille 8×8, distance de Chebyshev, voisinages
+  geometry.js      grille 16×16, distance de Chebyshev, voisinages
   board.js         génération par croissance de graines, régions de biome
   state.js         structure du state, sérialisation, lecture
   effects.js       effets portés et globaux, décompte des durées
@@ -52,7 +57,7 @@ js/ui/           couche vue : seule à toucher le DOM
 css/             jetons de design puis feuilles de composants
 dev/             pages de mise au point (génération, prévisualisations)
 tests/           harnais maison + tests du moteur
-tools/           scripts d'analyse hors jeu
+tools/           scripts d'analyse hors jeu (dont un modèle de joueur)
 docs/            inventaire des assets
 ```
 
@@ -93,19 +98,26 @@ Toutes les valeurs chiffrées sont centralisées dans `BALANCE`
 Deux outils mesurent l'effet d'un réglage :
 
 ```sh
-npm run sim         # parties complètes par actions légales aléatoires
-node tools/balance.mjs 40   # matrice instinct contre instinct, sans carte
+npm run sim                 # robustesse : actions légales aléatoires
+npm run sim -- 200 --oriente   # rythme réel : un joueur qui vise le Roi adverse
+node tools/balance.mjs 40      # matrice instinct contre instinct, sans carte
 ```
 
-La matrice isole la valeur d'une créature, mais elle mesure surtout la capacité
-à **engager** le combat : un instinct qui refuse d'attaquer la plupart des
-cibles (dominant, charognard) y perd par construction, et le fuyard, qui
-n'attaque jamais, y fait 0 %. Ce n'est pas un défaut d'équilibrage, c'est
-l'identité du jeu — ces créatures se jouent en appui, ce qu'un duel isolé ne
-sait pas mesurer.
+Les deux modes disent deux choses différentes. Le mode aléatoire vérifie que le
+moteur encaisse n'importe quelle suite d'actions légales. Le mode orienté
+(`tools/ai.mjs`, un modèle de joueur sommaire qui pousse vers le Roi adverse)
+mesure le rythme : **100 % des parties s'y concluent par régicide, en une
+vingtaine de manches**, sans que la mort subite ait à intervenir.
 
-Le coût reflète donc l'initiative plutôt que la puissance brute : chasseur 4⚡,
-territorial et protecteur 3⚡, dominant et charognard 2⚡, fuyard 1⚡.
+La matrice des duels isole la valeur d'une créature, mais elle mesure surtout
+la capacité à conclure : le Tueur de Roi y domine parce qu'il est le seul à
+menacer directement l'enjeu, et le Protecteur y fait 0 % parce qu'une armée de
+protecteurs ne tue personne. Ce n'est pas un défaut d'équilibrage — c'est la
+forme du jeu, qu'un duel à une seule créature ne sait pas rendre.
+
+Ouvrir la partie étant un avantage de tempo, le joueur qui ouvre touche une
+première rente d'énergie réduite (`energy.openingPenalty`) — une compensation
+façon komi, calibrée à la mesure.
 
 Mode debug, dans l'inspecteur : affiche la vision de toutes les créatures et
 permet d'avancer d'un tour à vide.

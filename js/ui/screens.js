@@ -3,7 +3,7 @@
  * hot-seat, fin de partie, règles.
  */
 
-import { BALANCE, CARDS, INSTINCTS, BIOME_META, BIOME_LIST } from '../engine/index.js';
+import { BALANCE, CARDS, INSTINCTS, INSTINCT_LABEL, BIOME_META, BIOME_LIST } from '../engine/index.js';
 import { GLYPHS, LOGO } from './assets.js';
 import { cardFace } from './card-view.js';
 import { el } from './dom.js';
@@ -76,13 +76,13 @@ export function deckScreen({ player, onValidate }) {
   );
 }
 
-/** Placement du fuyard de départ. */
+/** Placement du Roi. */
 export function placementBanner(player) {
   return el(
     'div',
     { class: 'banniere' },
     el('strong', {}, `Joueur ${player + 1}`),
-    ' — placez votre fuyard de départ sur votre moitié de plateau.'
+    ' — placez votre Roi sur votre moitié de plateau. Tout se joue autour de lui.'
   );
 }
 
@@ -129,7 +129,7 @@ export function gameOverScreen({ state, durationMs, onReplay, onHome }) {
       bilan('Manches', state.round),
       bilan('Créatures tuées — Joueur 1', state.players[0].kills),
       bilan('Créatures tuées — Joueur 2', state.players[1].kills),
-      bilan('Fin', state.endedReason === 'annihilation' ? 'Annihilation' : state.endedReason ?? '—')
+      bilan('Fin', state.endedReason === 'regicide' ? 'Régicide' : state.endedReason ?? '—')
     ),
     el(
       'div',
@@ -151,13 +151,19 @@ export function rulesScreen({ onBack }) {
     section('Le principe', [
       'Vous ne déplacez jamais vos créatures : chacune obéit à un instinct, un algorithme simple et prévisible.',
       'Vous agissez indirectement — invoquer, changer les instincts, transformer le terrain, buffer et débuffer.',
-      'Vous gagnez quand l’adversaire n’a plus une seule créature.',
+      'Chaque joueur pose un Roi avant la partie. Vous gagnez en tuant le Roi adverse.',
+      'Le Roi ne se régénère jamais : chaque point de vie que vous lui prenez est acquis.',
     ]),
     section('Une manche', [
       `+${BALANCE.energy.perTurn} énergie (plafond ${BALANCE.energy.max}), puis une carte piochée.`,
       `Vos actions, dans l’ordre que vous voulez, en ${BALANCE.turn.seconds} secondes.`,
       'Puis toutes les créatures des deux joueurs bougent, puis tous les combats se résolvent en même temps.',
       'Enfin, les créatures qui n’ont ni frappé ni été touchées regagnent 1 PV.',
+    ]),
+    section('Le Roi', [
+      'Il fuit l’ennemi le plus proche qu’il voit et ne frappe qu’en riposte.',
+      'Aucune carte ne peut détourner son comportement : ni panique, ni obsession, ni changement d’instinct, ni leurre.',
+      'Il ne se régénère jamais. Le Tueur de Roi, lui, sait toujours où il est.',
     ]),
     section('À savoir', [
       'Les distances se comptent en cases, diagonales comprises. La portée d’attaque est de 1.',
@@ -220,12 +226,11 @@ const statLine = (instinct) => {
 };
 
 const INSTINCT_TEXTE = {
-  [INSTINCTS.FUYARD]: { nom: 'Fuyard', regle: 'N’attaque jamais, s’éloigne de ce qu’il voit.' },
-  [INSTINCTS.CHAROGNARD]: { nom: 'Charognard', regle: 'Achève les blessés, rejoint les combats.' },
-  [INSTINCTS.PROTECTEUR]: { nom: 'Protecteur', regle: 'S’interpose et encaisse à la place d’un allié.' },
-  [INSTINCTS.TERRITORIAL]: { nom: 'Territorial', regle: 'Ne quitte jamais sa région, voit ce qui la borde.' },
-  [INSTINCTS.DOMINANT]: { nom: 'Dominant', regle: 'Ne frappe que fuyards et charognards.' },
-  [INSTINCTS.CHASSEUR]: { nom: 'Chasseur', regle: 'Fonce sur l’ennemi le plus proche.' },
+  [INSTINCTS.ROI]: { nom: INSTINCT_LABEL[INSTINCTS.ROI], regle: 'Fuit le combat, riposte, ne se régénère jamais. Sa mort finit la partie.' },
+  [INSTINCTS.PROTECTEUR]: { nom: INSTINCT_LABEL[INSTINCTS.PROTECTEUR], regle: 'S’interpose et encaisse à la place d’un allié.' },
+  [INSTINCTS.TERRITORIAL]: { nom: INSTINCT_LABEL[INSTINCTS.TERRITORIAL], regle: 'Ne quitte jamais sa région, voit ce qui la borde.' },
+  [INSTINCTS.CHASSEUR]: { nom: INSTINCT_LABEL[INSTINCTS.CHASSEUR], regle: 'Fonce sur l’ennemi le plus proche.' },
+  [INSTINCTS.TUEUR_DE_ROI]: { nom: INSTINCT_LABEL[INSTINCTS.TUEUR_DE_ROI], regle: 'Va droit sur le Roi adverse. Ne frappe que lui.' },
 };
 
 const section = (titre, points) =>

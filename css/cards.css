@@ -6,9 +6,9 @@
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: 4px;
-  width: 124px;
-  min-height: 158px;
-  padding: 8px 8px 12px;
+  width: 122px;
+  min-height: 146px;
+  padding: 7px 8px 11px;
   text-align: left;
   color: var(--encre);
   background: var(--parchemin);
@@ -46,7 +46,7 @@
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
 
-.carte .medaillon { display: block; margin: 2px 0 0 auto; width: 78%; color: var(--encre); }
+.carte .medaillon { display: block; margin: 1px 0 0 auto; width: 66%; color: var(--encre); }
 .carte .medaillon svg { display: block; width: 100%; height: auto; }
 
 .carte .nom {
@@ -123,7 +123,7 @@
   text-transform: uppercase;
   color: var(--parchemin-faible);
 }
-.invocations .boutons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.invocations .boutons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
 
 .invocation {
   display: grid;
@@ -185,7 +185,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 124px;
+  width: 122px;
   transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--sc, 1)) rotate(var(--rot, 0deg));
   transform-origin: top left;
   will-change: transform, opacity;
@@ -201,7 +201,7 @@
 .carte-animee.retourne { transform-style: preserve-3d; }
 .carte-animee.retourne .recto,
 .carte-animee.retourne .verso { backface-visibility: hidden; }
-.carte-animee.retourne .recto { width: 124px; }
+.carte-animee.retourne .recto { width: 122px; }
 .carte-animee.retourne .recto svg { display: block; width: 100%; height: auto; }
 .carte-animee.retourne .verso { position: absolute; inset: 0; transform: rotateY(180deg); }
 .carte-animee.retourne.en-vol { animation: retourne calc(400ms * var(--anim)) ease-in-out; }

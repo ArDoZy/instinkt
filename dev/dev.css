@@ -42,7 +42,7 @@ h1 {
 .plateau {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(16, 1fr);
   aspect-ratio: 1;
   background: var(--encre);
   border: 1px solid var(--encre-trait);
@@ -113,7 +113,7 @@ h1 {
   display: grid;
   place-items: center;
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 10px;
   color: var(--encre);
   opacity: 0;
 }

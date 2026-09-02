@@ -6,7 +6,7 @@
  * pour tenir la limite de ~1,2 s par phase (§7). Un clic passe l'animation.
  */
 
-import { BIOME_META, xOf, yOf } from '../engine/index.js';
+import { BIOME_META, W, xOf, yOf } from '../engine/index.js';
 import { DEATH_SHARDS } from './assets.js';
 import { el, nextFrame, reducedMotion } from './dom.js';
 
@@ -232,7 +232,7 @@ export function createAnimator(boardView, hooks = {}) {
   // -------------------------------------------------------------------------
 
   const cellOfNode = (node) =>
-    Number(node.style.getPropertyValue('--y')) * 8 + Number(node.style.getPropertyValue('--x'));
+    Number(node.style.getPropertyValue('--y')) * W + Number(node.style.getPropertyValue('--x'));
 
   /** Nombre de dégâts qui monte et s'estompe au-dessus de la cible. */
   function floatDamage(cell, amount, kind) {

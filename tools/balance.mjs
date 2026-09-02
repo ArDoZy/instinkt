@@ -1,14 +1,15 @@
 /**
  * Passe d'équilibrage : matrice instinct contre instinct.
  *
- * Chaque joueur n'invoque qu'un seul instinct, sans carte : le résultat isole
- * la valeur intrinsèque de chaque créature. `node tools/balance.mjs [parties]`
+ * Chaque joueur pose son Roi puis n'invoque qu'un seul instinct, sans carte :
+ * le résultat isole la valeur d'une créature dans la course au régicide.
+ * `node tools/balance.mjs [parties]`
  */
 
 import {
   ACTIONS,
   BALANCE,
-  INSTINCT_LIST,
+  SUMMONABLE_INSTINCTS,
   applyAction,
   createGame,
   createRng,
@@ -47,7 +48,7 @@ function duel(instincts, seed) {
   return state;
 }
 
-const noms = INSTINCT_LIST;
+const noms = SUMMONABLE_INSTINCTS;
 const resultats = new Map();
 let manches = 0;
 let parties = 0;
@@ -70,7 +71,7 @@ for (const a of noms) {
 }
 
 const pad = (s, n) => String(s).padEnd(n);
-const col = 13;
+const col = 14;
 
 console.log(`Matrice des duels — ${parParcelle} parties par case, sans carte`);
 console.log('Lecture : taux de victoire de la créature en ligne contre celle en colonne.\n');

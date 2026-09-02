@@ -7,7 +7,7 @@
 
 import { INSTINCTS } from './constants.js';
 import { EFFECTS, enemyLure, GLOBALS, getEffect, globalFor } from './effects.js';
-import { isDominantPrey, isWounded } from './creatures.js';
+import { isMindControllable, kingOf } from './creatures.js';
 import { creatureById } from './state.js';
 import { dist, neighbors8 } from './geometry.js';
 import { visibleAllies, visibleCells, visibleEnemies } from './vision.js';
@@ -51,15 +51,16 @@ export const idle = () => null;
  * §6.1 : Obsession, puis Appât, puis instinct.
  */
 export function decide(state, creature) {
-  const obsession = getEffect(creature, EFFECTS.OBSESSION);
+  const obsession = isMindControllable(creature) ? getEffect(creature, EFFECTS.OBSESSION) : null;
   if (obsession) {
     const prey = creatureById(state, obsession.targetId);
     // L'Obsession ignore la vision : la traque porte sur tout le plateau (§6.1).
     if (prey && prey.hp > 0) return chase(prey);
   }
 
-  // Un fuyard ignore l'Appât : il ne cherche jamais rien (§6.1).
-  if (creature.instinct !== INSTINCTS.FUYARD) {
+  // Un fuyard ignore l'Appât : il ne cherche jamais rien. Le Roi aussi : rien
+  // ne le détourne de sa fuite.
+  if (creature.instinct !== INSTINCTS.FUYARD && isMindControllable(creature)) {
     const lure = enemyLure(state, creature);
     if (lure && visibleCells(state, creature).has(lure.cell)) return seek(lure.cell);
   }
@@ -95,21 +96,6 @@ const INSTINCT_ALGORITHMS = {
   },
 
   /**
-   * Cible l'ennemi blessé (PV < PVmax / 2) le plus proche ; à défaut, le dernier
-   * combat perçu ; sinon rien (§4, §6.8).
-   */
-  [INSTINCTS.CHAROGNARD](state, creature) {
-    const prey = nearest(creature.cell, visibleEnemies(state, creature, isWounded));
-    if (prey) return chase(prey);
-
-    const seen = visibleCells(state, creature);
-    const battles = state.lastCombatCells
-      .filter((cell) => seen.has(cell) && cell !== creature.cell)
-      .sort((a, b) => dist(creature.cell, a) - dist(creature.cell, b) || a - b);
-    return battles.length ? seek(battles[0]) : idle();
-  },
-
-  /**
    * Cible l'allié le plus proche ; à distance égale, le plus blessé (§4).
    * Se place entre lui et l'ennemi le plus proche.
    */
@@ -123,20 +109,22 @@ const INSTINCT_ALGORITHMS = {
   },
 
   /**
-   * Ne frappe que fuyards et charognards ennemis — sauf sous Hiérarchie Brisée,
-   * où il cible la créature la plus proche toutes appartenances confondues (§6.8).
+   * Le Roi évite les combats : il s'éloigne de l'ennemi le plus proche qu'il
+   * voit, exactement comme un fuyard. Il n'engage jamais — il riposte
+   * seulement, ce dont la phase de combat se charge.
    */
-  [INSTINCTS.DOMINANT](state, creature) {
-    if (globalFor(state, GLOBALS.HIERARCHIE_BRISEE, creature)) {
-      const seen = visibleCells(state, creature);
-      const anyone = state.creatures.filter(
-        (o) => o.hp > 0 && o.id !== creature.id && seen.has(o.cell)
-      );
-      const prey = nearest(creature.cell, anyone);
-      return prey ? chase(prey) : idle();
-    }
-    const prey = nearest(creature.cell, visibleEnemies(state, creature, isDominantPrey));
-    return prey ? chase(prey) : idle();
+  [INSTINCTS.ROI](state, creature) {
+    const menace = nearest(creature.cell, visibleEnemies(state, creature));
+    return menace ? flee(menace.cell) : idle();
+  },
+
+  /**
+   * Le tueur de Roi sait toujours où se trouve le Roi adverse, quelle que
+   * soit la distance et quelle que soit sa vision : il va droit dessus.
+   */
+  [INSTINCTS.TUEUR_DE_ROI](state, creature) {
+    const roi = kingOf(state, 1 - creature.owner);
+    return roi ? chase(roi) : idle();
   },
 };
 

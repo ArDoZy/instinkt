@@ -8,13 +8,17 @@
 
 import { BALANCE, BIOMES, CARDS_BY_ID, INSTINCTS, TERRAIN_TRANSFORMS } from './constants.js';
 import { EFFECTS, GLOBALS, addEffect } from './effects.js';
-import { changeInstinct } from './creatures.js';
+import { changeInstinct, isMindControllable } from './creatures.js';
 import { withBiome } from './board.js';
 import { ALL_CELLS, H, W, dist, idx, xOf, yOf } from './geometry.js';
 import { creatureById, isCellFree, livingCreatures, pushEvent, refreshRegions, regionOf } from './state.js';
 
 const alliesOf = (state, player) => livingCreatures(state).filter((c) => c.owner === player);
 const enemiesOf = (state, player) => livingCreatures(state).filter((c) => c.owner !== player);
+
+/** Cibles possibles d'une carte, Rois exclus si elle détourne un comportement. */
+const ciblables = (creatures, card) =>
+  card.mindControl ? creatures.filter(isMindControllable) : creatures;
 
 /** Régions d'un biome donné. */
 const regionsOfBiome = (state, biome) => state.regions.filter((r) => r.biome === biome);
@@ -33,13 +37,13 @@ export function legalTargets(state, player, cardId) {
     return pool.length ? [{}] : [];
   }
 
-  if (card.target === 'ally') return alliesOf(state, player).map((c) => ({ creatureId: c.id }));
+  if (card.target === 'ally') return ciblables(alliesOf(state, player), card).map((c) => ({ creatureId: c.id }));
 
-  if (card.target === 'enemy') return enemiesOf(state, player).map((c) => ({ creatureId: c.id }));
+  if (card.target === 'enemy') return ciblables(enemiesOf(state, player), card).map((c) => ({ creatureId: c.id }));
 
   if (card.target === 'enemy+ally') {
     const targets = [];
-    for (const enemy of enemiesOf(state, player)) {
+    for (const enemy of ciblables(enemiesOf(state, player), card)) {
       for (const ally of alliesOf(state, player)) {
         targets.push({ creatureId: enemy.id, allyId: ally.id });
       }
@@ -57,7 +61,8 @@ export function legalTargets(state, player, cardId) {
     for (let y = 0; y < H - 1; y++) {
       for (let x = 0; x < W - 1; x++) {
         const cells = squareCells(idx(x, y));
-        if (enemiesOf(state, player).some((c) => cells.includes(c.cell))) targets.push({ cell: idx(x, y) });
+        const victimes = ciblables(enemiesOf(state, player), card);
+        if (victimes.some((c) => cells.includes(c.cell))) targets.push({ cell: idx(x, y) });
       }
     }
     return targets;
@@ -142,7 +147,8 @@ export function applyCard(state, player, cardId, target = {}) {
 
     case 'panique_collective': {
       const cells = squareCells(target.cell);
-      for (const victim of enemiesOf(state, player).filter((c) => cells.includes(c.cell))) {
+      const victimes = enemiesOf(state, player).filter((c) => cells.includes(c.cell) && isMindControllable(c));
+      for (const victim of victimes) {
         // Panique mémorise l'instinct du moment ; c'est celui-là qui revient (§6.6).
         addEffect(victim, {
           kind: EFFECTS.PANIQUE,

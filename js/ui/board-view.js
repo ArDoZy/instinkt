@@ -68,7 +68,8 @@ export function createBoardView(container, handlers = {}) {
     cellEls[cell].focus();
   }
 
-  const board = el('div', { class: 'plateau', role: 'grid' }, cases, traits, creaturesLayer, overlays, el('div', { class: 'mediane' }));
+  // La grille est pilotée par --n : le CSS ne code jamais la taille en dur.
+  const board = el('div', { class: 'plateau', role: 'grid', style: { '--n': W } }, cases, traits, creaturesLayer, overlays, el('div', { class: 'mediane' }));
   container.append(board);
 
   /** @type {Map<number, HTMLElement>} */

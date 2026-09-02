@@ -23,12 +23,11 @@ export const GLYPHS = {
     `<path d="M4 8h9M2 12h11M4 16h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
      <path d="M15 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`
   ),
-  // Bec crochu : l'attente du charognard.
-  [INSTINCTS.CHAROGNARD]: svg(
+  // Couronne : l'enjeu de la partie, reconnaissable au premier coup d'œil.
+  [INSTINCTS.ROI]: svg(
     '0 0 24 24',
-    `<path d="M5 5c7 0 12 4 12 9 0 3-2 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-     <path d="M17 14l4 3-5 1z" fill="currentColor"/>
-     <circle cx="7.5" cy="7.5" r="1.6" fill="currentColor"/>`
+    `<path d="M3 8l4 5 5-8 5 8 4-5v10H3z" fill="currentColor"/>
+     <path d="M3 20h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`
   ),
   // Un corps abrité sous un arc.
   [INSTINCTS.PROTECTEUR]: svg(
@@ -42,11 +41,12 @@ export const GLYPHS = {
     `<rect x="3.5" y="3.5" width="17" height="17" rx="1" stroke="currentColor" stroke-width="2.2"/>
      <rect x="9.5" y="9.5" width="5" height="5" fill="currentColor"/>`
   ),
-  // Chevron massif, tête basse.
-  [INSTINCTS.DOMINANT]: svg(
+  // Lame en travers d'une couronne : le tueur de Roi ne vise que lui.
+  [INSTINCTS.TUEUR_DE_ROI]: svg(
     '0 0 24 24',
-    `<path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-     <path d="M3 13l9 7 9-7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>`
+    `<path d="M12 1l2.4 4.4L19 3.6l-1.4 5H6.4L5 3.6l4.6 1.8z" fill="currentColor" opacity=".55"/>
+     <path d="M12 6.5l3 4.5-3 12-3-12z" fill="currentColor"/>
+     <path d="M6.5 11h11" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>`
   ),
   // Pointe de visée.
   [INSTINCTS.CHASSEUR]: svg(
@@ -69,11 +69,11 @@ export const SILHOUETTES = {
      <circle cx="32" cy="13" r="7" fill="currentColor"/>
      <path d="M22 52l-5 8M42 52l5 8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>`
   ),
-  // Oiseau au sol, ailes repliées.
-  [INSTINCTS.CHAROGNARD]: svg(
+  // Masse imposante, épaules larges, couronne suggérée.
+  [INSTINCTS.ROI]: svg(
     '0 0 64 64',
-    `<path d="M32 8c11 0 19 12 19 26S43 58 32 58 13 48 13 34 21 8 32 8z" fill="currentColor"/>
-     <path d="M14 30l-8 12 12-3M50 30l8 12-12-3" fill="currentColor" opacity=".75"/>`
+    `<path d="M13 22h38v22c0 9-8 15-19 15s-19-6-19-15z" fill="currentColor"/>
+     <path d="M13 22l5-13 7 8 7-12 7 12 7-8 5 13z" fill="currentColor"/>`
   ),
   // Masse large et basse, carapace ovale.
   [INSTINCTS.PROTECTEUR]: svg(
@@ -89,11 +89,11 @@ export const SILHOUETTES = {
      <circle cx="32" cy="11" r="7" fill="currentColor"/>
      <path d="M14 50l-6 8M50 50l6 8M24 52v9M40 52v9" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>`
   ),
-  // Épaules hautes, tête basse.
-  [INSTINCTS.DOMINANT]: svg(
+  // Silhouette effilée, encapuchonnée, tendue vers l'avant.
+  [INSTINCTS.TUEUR_DE_ROI]: svg(
     '0 0 64 64',
-    `<path d="M32 6l22 14v20c0 10-10 18-22 18S10 50 10 40V20z" fill="currentColor"/>
-     <path d="M18 6l6 10M46 6l-6 10" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`
+    `<path d="M32 4c7 0 12 7 12 15 0 5-2 9-2 13l6 28H16l6-28c0-4-2-8-2-13C20 11 25 4 32 4z" fill="currentColor"/>
+     <path d="M20 26l-9 6M44 26l9 6" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>`
   ),
   // Félin en extension, corps tendu vers l'avant.
   [INSTINCTS.CHASSEUR]: svg(

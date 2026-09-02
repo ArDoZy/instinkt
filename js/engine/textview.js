@@ -17,7 +17,7 @@ export function renderBiomes(board) {
   for (let y = 0; y < H; y++) {
     const cells = [];
     for (let x = 0; x < W; x++) cells.push(BIOME_META[board.tiles[idx(x, y)]].short);
-    rows.push(`${y}  ${cells.join(' ')}`);
+    rows.push(`${String(y).padStart(2)} ${cells.join(' ')}`);
     if (y === H / 2 - 1) rows.push('   ' + '-'.repeat(W * 2 - 1));
   }
   return rows.join('\n');
@@ -29,7 +29,7 @@ export function renderRegions(state) {
   for (let y = 0; y < H; y++) {
     const cells = [];
     for (let x = 0; x < W; x++) cells.push(state.regionOfCell[idx(x, y)].toString(36));
-    rows.push(`${y}  ${cells.join(' ')}`);
+    rows.push(`${String(y).padStart(2)} ${cells.join(' ')}`);
   }
   return rows.join('\n');
 }
@@ -53,7 +53,7 @@ export function renderBoard(state) {
         cells.push(BIOME_META[state.board.tiles[cell]].short.toLowerCase());
       }
     }
-    rows.push(`${y}  ${cells.join(' ')}`);
+    rows.push(`${String(y).padStart(2)} ${cells.join(' ')}`);
     if (y === H / 2 - 1) rows.push('   ' + '-'.repeat(W * 2 - 1));
   }
   return rows.join('\n');

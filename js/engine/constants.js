@@ -28,39 +28,64 @@ export const BIOME_META = {
 };
 
 export const INSTINCTS = /** @type {const} */ ({
-  FUYARD: 'fuyard',
-  CHAROGNARD: 'charognard',
+  /** Posé au début de la partie, jamais invoqué : c'est l'enjeu. */
+  ROI: 'roi',
   PROTECTEUR: 'protecteur',
   TERRITORIAL: 'territorial',
-  DOMINANT: 'dominant',
   CHASSEUR: 'chasseur',
+  TUEUR_DE_ROI: 'tueurDeRoi',
+  /** Non invocable : état de panique infligé par carte (Peur Dévorante). */
+  FUYARD: 'fuyard',
 });
 
 export const INSTINCT_LIST = [
-  INSTINCTS.FUYARD,
-  INSTINCTS.CHAROGNARD,
+  INSTINCTS.ROI,
   INSTINCTS.PROTECTEUR,
   INSTINCTS.TERRITORIAL,
-  INSTINCTS.DOMINANT,
   INSTINCTS.CHASSEUR,
+  INSTINCTS.TUEUR_DE_ROI,
+  INSTINCTS.FUYARD,
+];
+
+/** Noms lisibles, partagés par le journal du moteur et l'interface. */
+export const INSTINCT_LABEL = {
+  [INSTINCTS.ROI]: 'Roi',
+  [INSTINCTS.PROTECTEUR]: 'Protecteur',
+  [INSTINCTS.TERRITORIAL]: 'Territorial',
+  [INSTINCTS.CHASSEUR]: 'Chasseur',
+  [INSTINCTS.TUEUR_DE_ROI]: 'Tueur de Roi',
+  [INSTINCTS.FUYARD]: 'Paniquée',
+};
+
+/** Ce qu'un joueur peut invoquer : ni le Roi, ni l'état de panique. */
+export const SUMMONABLE_INSTINCTS = [
+  INSTINCTS.PROTECTEUR,
+  INSTINCTS.TERRITORIAL,
+  INSTINCTS.CHASSEUR,
+  INSTINCTS.TUEUR_DE_ROI,
 ];
 
 export const BALANCE = {
   board: {
-    width: 8,
-    height: 8,
+    width: 16,
+    height: 16,
     /** Cases libres (non-montagne) minimum par moitié de plateau. */
-    minFreeCellsPerHalf: 8,
-    minRegions: 4,
-    maxRegions: 7,
+    minFreeCellsPerHalf: 40,
+    /**
+     * Le nombre de régions suit la taille du plateau : les taches de biome
+     * gardent le même calibre qu'en 8×8 (une dizaine de cases), il y en a
+     * simplement quatre fois plus.
+     */
+    minRegions: 14,
+    maxRegions: 30,
     /** Part maximale de montagne sur le plateau : au-delà, la partie s'étrique. */
     maxMountainRatio: 0.22,
     /** Part maximale d'une seule région : évite les plateaux monochromes. */
-    maxRegionRatio: 0.45,
+    maxRegionRatio: 0.14,
     /** Nombre de biomes distincts exigés : un plateau doit offrir des choix. */
-    minDistinctBiomes: 3,
-    minSeeds: 6,
-    maxSeeds: 9,
+    minDistinctBiomes: 4,
+    minSeeds: 26,
+    maxSeeds: 38,
     /** Poids de tirage des biomes pour les graines de génération. */
     biomeWeights: [
       [BIOMES.FORET, 1],
@@ -70,19 +95,39 @@ export const BALANCE = {
       [BIOMES.MONTAGNE, 0.7],
     ],
     /** Nombre maximal de tentatives de génération avant abandon. */
-    maxGenerationAttempts: 200,
+    maxGenerationAttempts: 400,
   },
 
-  energy: { perTurn: 4, max: 10, start: 0 },
+  energy: {
+    perTurn: 4,
+    max: 10,
+    start: 0,
+    /**
+     * Compensation, façon komi : dans une course au régicide, ouvrir est un
+     * avantage de tempo. Le joueur qui ouvre touche donc une première rente
+     * réduite de ce montant — c'est un demi-tour de retard sur sa première
+     * invocation, pas une punition durable.
+     */
+    openingPenalty: 2,
+  },
   hand: { max: 4 },
   deck: { size: 6 },
-  turn: { seconds: 20 },
+  turn: { seconds: 30 },
 
-  /** PV regagnés en fin de manche si la créature n'a ni frappé ni été touchée. */
+  /**
+   * PV regagnés en fin de manche si la créature n'a ni frappé ni été touchée.
+   * Le Roi en est exclu : un point de vie qu'il perd l'est pour toujours.
+   */
   regen: 1,
 
   /** Mort subite : à partir de la manche 30, -1 PV/phase, +1 toutes les 10 manches. */
-  suddenDeath: { startRound: 30, damage: 1, step: 10 },
+  /**
+   * Mort subite : filet de sécurité, pas moteur de la partie. Une traque
+   * décidée aboutit en une vingtaine de manches ; le seuil est posé au-delà
+   * pour que ce soit le régicide qui conclue, et la mort subite seulement les
+   * parties qui s'enlisent.
+   */
+  suddenDeath: { startRound: 40, damage: 1, step: 10 },
 
   /** Rayon de recherche d'une case de repli lors de Poussée Volcanique. */
   volcanicPushRadius: 2,
@@ -94,13 +139,17 @@ export const BALANCE = {
    * toujours (chasseur) est cher. Voir tools/balance.mjs.
    */
   creatures: {
-    [INSTINCTS.FUYARD]: { cost: 1, hp: 6, atk: 0, speed: 2, vision: 3 },
-    [INSTINCTS.CHAROGNARD]: { cost: 2, hp: 9, atk: 3, speed: 2, vision: 4 },
+    // Le Roi n'est pas invocable : chaque joueur pose le sien avant la partie.
+    [INSTINCTS.ROI]: { cost: 0, hp: 55, atk: 8, speed: 1, vision: 4 },
     [INSTINCTS.PROTECTEUR]: { cost: 3, hp: 14, atk: 2, speed: 1, vision: 3 },
     // Le territorial voit sa région + son halo ; `vision` n'est pas utilisée.
     [INSTINCTS.TERRITORIAL]: { cost: 3, hp: 13, atk: 3, speed: 1, vision: 0 },
-    [INSTINCTS.DOMINANT]: { cost: 2, hp: 12, atk: 5, speed: 1, vision: 4 },
     [INSTINCTS.CHASSEUR]: { cost: 4, hp: 11, atk: 4, speed: 2, vision: 5 },
+    // Le tueur de Roi sait toujours où est le Roi adverse ; sa vision ne sert
+    // qu'à percevoir ce qui l'entoure.
+    [INSTINCTS.TUEUR_DE_ROI]: { cost: 3, hp: 8, atk: 6, speed: 2, vision: 3 },
+    // État de panique, jamais invoqué.
+    [INSTINCTS.FUYARD]: { cost: 1, hp: 6, atk: 0, speed: 2, vision: 3 },
   },
 
   /** Planchers de statistiques (§6.6). */
@@ -146,43 +195,53 @@ export const CARD_CATEGORIES = /** @type {const} */ ({
 export const CARDS = [
   {
     id: 'retour_instinct_primordial',
+    /** Détourne un comportement : sans effet sur un Roi. */
+    mindControl: true,
     name: "Retour à l'Instinct Primordial",
     cost: 3,
     category: CARD_CATEGORIES.INSTINCT,
     target: 'ally',
-    text: 'La créature devient Chasseur. PV conservés au prorata.',
+    text: 'La créature devient Chasseur, PV au prorata.',
   },
   {
     id: 'peur_devorante',
+    /** Détourne un comportement : sans effet sur un Roi. */
+    mindControl: true,
     name: 'Peur Dévorante',
     cost: 3,
     category: CARD_CATEGORIES.INSTINCT,
     target: 'enemy',
-    text: 'La créature devient Fuyard.',
+    text: 'La créature panique : elle fuit et n’attaque plus.',
   },
   {
     id: 'terrain_sacre',
+    /** Détourne un comportement : sans effet sur un Roi. */
+    mindControl: true,
     name: 'Terrain Sacré',
     cost: 3,
     category: CARD_CATEGORIES.INSTINCT,
     target: 'ally',
-    text: 'La créature devient Territoriale ; sa zone est la région où elle se trouve.',
+    text: 'La créature devient Territoriale sur sa région.',
   },
   {
     id: 'obsession',
+    /** Détourne un comportement : sans effet sur un Roi. */
+    mindControl: true,
     name: 'Obsession',
     cost: 2,
     category: CARD_CATEGORIES.INSTINCT,
     target: 'enemy+ally',
-    text: "La créature traque une créature alliée désignée jusqu'à sa mort, puis retrouve son instinct.",
+    text: "Traque une créature alliée désignée jusqu'à sa mort.",
   },
   {
     id: 'panique_collective',
+    /** Détourne un comportement : sans effet sur un Roi. */
+    mindControl: true,
     name: 'Panique Collective',
     cost: 3,
     category: CARD_CATEGORIES.INSTINCT,
     target: 'area2x2',
-    text: 'Les créatures ennemies du carré 2×2 deviennent Fuyardes pendant 2 tours.',
+    text: 'Les ennemis du carré 2×2 paniquent pendant 2 tours.',
   },
   {
     id: 'hierarchie_brisee',
@@ -190,7 +249,7 @@ export const CARDS = [
     cost: 3,
     category: CARD_CATEGORIES.INSTINCT,
     target: 'global',
-    text: 'Pendant 2 tours, les Dominants adverses attaquent n’importe quelle créature adjacente.',
+    text: 'Pendant 2 tours, les créatures adverses frappent aussi leurs alliées.',
   },
   {
     id: 'frenesie',
@@ -206,7 +265,7 @@ export const CARDS = [
     cost: 2,
     category: CARD_CATEGORIES.BUFF,
     target: 'cell',
-    text: 'Pendant 2 tours, les créatures ennemies qui voient le leurre s’y dirigent.',
+    text: 'Pendant 2 tours, les ennemis qui voient le leurre s’y dirigent.',
   },
   {
     id: 'lune_de_sang',
@@ -214,7 +273,7 @@ export const CARDS = [
     cost: 3,
     category: CARD_CATEGORIES.BUFF,
     target: 'global',
-    text: 'Pendant 3 tours, les Chasseurs et Dominants alliés gagnent +1 ATK et +1 vitesse.',
+    text: 'Pendant 3 tours, Chasseurs et Tueurs de Roi alliés : +1 ATK, +1 vitesse.',
   },
   {
     id: 'carapace',
@@ -222,7 +281,7 @@ export const CARDS = [
     cost: 3,
     category: CARD_CATEGORIES.BUFF,
     target: 'ally',
-    text: 'Pendant 2 tours, la créature ne subit aucun dégât mais son ATK tombe à 0.',
+    text: 'Pendant 2 tours : aucun dégât subi, mais ATK à 0.',
   },
   {
     id: 'brouillard_epais',
@@ -238,7 +297,7 @@ export const CARDS = [
     cost: 2,
     category: CARD_CATEGORIES.TERRAIN,
     target: 'global',
-    text: 'Pendant 3 tours, les Protecteurs alliés ne subissent que la moitié des dégâts.',
+    text: 'Pendant 3 tours, les Protecteurs alliés encaissent moitié moins.',
   },
   {
     id: 'feu_de_foret',
@@ -262,7 +321,7 @@ export const CARDS = [
     cost: 3,
     category: CARD_CATEGORIES.TERRAIN,
     target: `region:${BIOMES.DESERT}`,
-    text: 'Toute la région de désert devient montagne ; les créatures sont repoussées.',
+    text: 'La région de désert devient montagne ; les créatures sont repoussées.',
   },
   {
     id: 'fertilisation',

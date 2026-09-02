@@ -8,7 +8,7 @@
 
 import { BALANCE, INSTINCTS } from './constants.js';
 import { EFFECTS, GLOBALS, getEffect, globalFor, hasEffect } from './effects.js';
-import { changeInstinct, isDominantPrey, stats } from './creatures.js';
+import { changeInstinct, isKing, isMindControllable, isRegicide, kingOf, stats } from './creatures.js';
 import { decide, goalCells, goalRank, nearest } from './instincts.js';
 import { blockedCells, findPath, reachableCells } from './pathfinding.js';
 import { adjacent, dist, neighbors8 } from './geometry.js';
@@ -196,17 +196,23 @@ function comparePriority(state, a, b) {
 export function isValidPrey(state, attacker, other) {
   if (other.hp <= 0 || other.id === attacker.id) return false;
 
-  const obsession = getEffect(attacker, EFFECTS.OBSESSION);
+  const obsession = isMindControllable(attacker) ? getEffect(attacker, EFFECTS.OBSESSION) : null;
   // Sous Obsession, elle ne frappe que sa cible, même si un autre ennemi la touche.
   if (obsession) return other.id === obsession.targetId;
 
+  // Le Roi n'engage jamais le combat : il ne frappe qu'en riposte, ce dont
+  // addKingRipostes se charge une fois toutes les attaques connues.
+  if (isKing(attacker)) return false;
+
+  // Une créature paniquée n'attaque plus rien.
   if (attacker.instinct === INSTINCTS.FUYARD) return false;
 
-  if (attacker.instinct === INSTINCTS.DOMINANT) {
-    // Hiérarchie Brisée : n'importe quelle voisine, alliée comprise (§5).
-    if (globalFor(state, GLOBALS.HIERARCHIE_BRISEE, attacker)) return true;
-    return other.owner !== attacker.owner && isDominantPrey(other);
-  }
+  // Hiérarchie Brisée : n'importe quelle voisine, alliée comprise, et sans
+  // égard pour les restrictions d'instinct (§5).
+  if (globalFor(state, GLOBALS.HIERARCHIE_BRISEE, attacker)) return true;
+
+  // Le tueur de Roi ne frappe que le Roi adverse.
+  if (isRegicide(attacker)) return other.owner !== attacker.owner && isKing(other);
 
   return other.owner !== attacker.owner;
 }
@@ -241,7 +247,29 @@ function planAttacks(state, plans) {
     attacks.push({ attackerId: creature.id, targetId: target.id, amount: stats(state, creature).atk });
   }
 
-  return refocusProtectors(state, attacks);
+  return addKingRipostes(state, refocusProtectors(state, attacks));
+}
+
+/**
+ * Le Roi évite les combats mais riposte : il ne frappe que les créatures qui
+ * le prennent pour cible dans cette même phase. La riposte porte même si un
+ * protecteur absorbe le coup — c'est bien le Roi qui était visé.
+ */
+function addKingRipostes(state, attacks) {
+  for (const king of livingCreatures(state)) {
+    if (!isKing(king)) continue;
+    const force = stats(state, king).atk;
+    if (force <= 0) continue;
+
+    const agresseurs = attacks
+      .filter((a) => a.targetId === king.id)
+      .map((a) => creatureById(state, a.attackerId))
+      .filter((c) => c && c.hp > 0 && adjacent(king.cell, c.cell));
+
+    const cible = nearest(king.cell, agresseurs);
+    if (cible) attacks.push({ attackerId: king.id, targetId: cible.id, amount: force });
+  }
+  return attacks;
 }
 
 /**
@@ -371,10 +399,14 @@ export function resolveSuddenDeath(state) {
   }
 }
 
-/** Régénération : +1 PV si la créature n'a ni attaqué ni été touchée (§3.6). */
+/**
+ * Régénération : +1 PV si la créature n'a ni attaqué ni été touchée (§3.6).
+ * Le Roi n'en bénéficie jamais : un point de vie qu'il perd l'est pour toujours.
+ */
 export function resolveRegen(state) {
   if (suddenDeathDamage(state) > 0) return;
   for (const creature of livingCreatures(state).sort(byId)) {
+    if (isKing(creature)) continue;
     if (creature.attackedThisPhase || creature.damagedThisPhase) continue;
     if (creature.hp >= creature.maxHp) continue;
     creature.hp = Math.min(creature.maxHp, creature.hp + BALANCE.regen);
@@ -424,16 +456,19 @@ export function resolveDeaths(state) {
 }
 
 /**
- * Fin de partie : un joueur à 0 créature perd immédiatement ; les deux à 0 lors
- * de la même phase, c'est un match nul (§6.10).
+ * Fin de partie : le joueur dont le Roi tombe perd immédiatement ; les deux
+ * Rois tombés lors de la même phase, c'est un match nul.
  */
 export function checkGameOver(state) {
-  const alive = [0, 1].map((p) => state.creatures.filter((c) => c.owner === p && c.hp > 0).length);
-  if (alive[0] > 0 && alive[1] > 0) return null;
+  // Avant la première manche, les Rois ne sont pas encore posés.
+  if (state.round === 0) return null;
 
-  const winner = alive[0] === 0 && alive[1] === 0 ? 'draw' : alive[0] === 0 ? 1 : 0;
+  const rois = [kingOf(state, 0), kingOf(state, 1)];
+  if (rois[0] && rois[1]) return null;
+
+  const winner = !rois[0] && !rois[1] ? 'draw' : rois[0] ? 0 : 1;
   state.winner = winner;
-  state.endedReason = 'annihilation';
-  pushEvent(state, 'gameOver', { winner, reason: 'annihilation' });
+  state.endedReason = 'regicide';
+  pushEvent(state, 'gameOver', { winner, reason: 'regicide' });
   return winner;
 }

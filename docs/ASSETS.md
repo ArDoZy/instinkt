@@ -25,12 +25,12 @@ pleins plutôt que filaires.
 
 | Fichier | Type | Dim. | Description | Source | Priorité |
 |---|---|---|---|---|---|
-| `glyphe-fuyard.svg` | SVG | 24×24 | Trois traits de fuite / empreinte en course, orientés vers l'extérieur | moteur | bloquant |
-| `glyphe-charognard.svg` | SVG | 24×24 | Bec crochu ou croissant en spirale d'attente | moteur | bloquant |
+| `glyphe-roi.svg` | SVG | 24×24 | Couronne pleine : l'enjeu de la partie | moteur | bloquant |
 | `glyphe-protecteur.svg` | SVG | 24×24 | Arc bombé posé sur un point (corps abrité) | moteur | bloquant |
 | `glyphe-territorial.svg` | SVG | 24×24 | Cadre fermé avec une marque au centre (borne) | moteur | bloquant |
-| `glyphe-dominant.svg` | SVG | 24×24 | Chevron large vers le bas, massif | moteur | bloquant |
 | `glyphe-chasseur.svg` | SVG | 24×24 | Pointe / triangle allongé avec ligne de visée | moteur | bloquant |
+| `glyphe-tueur-de-roi.svg` | SVG | 24×24 | Lame en travers d'une couronne | moteur | bloquant |
+| `glyphe-fuyard.svg` | SVG | 24×24 | Trois traits de fuite : l'état de panique infligé par carte | moteur | bloquant |
 
 ## 2. Silhouettes de créature
 
@@ -40,12 +40,12 @@ la silhouette ne doit donc pas être chargée au centre.
 
 | Fichier | Type | Dim. | Description | Source | Priorité |
 |---|---|---|---|---|---|
-| `creature-fuyard.svg` | SVG | 64×64 | Petit herbivore ramassé, pattes fines, corps allongé | placeholder → à fournir | bloquant |
-| `creature-charognard.svg` | SVG | 64×64 | Oiseau au sol, ailes repliées, dos voûté | placeholder → à fournir | bloquant |
+| `creature-roi.svg` | SVG | 64×64 | Masse imposante, épaules larges, couronne suggérée | placeholder → à fournir | bloquant |
 | `creature-protecteur.svg` | SVG | 64×64 | Masse large et basse, carapace ovale | placeholder → à fournir | bloquant |
 | `creature-territorial.svg` | SVG | 64×64 | Quadrupède trapu campé sur ses appuis | placeholder → à fournir | bloquant |
-| `creature-dominant.svg` | SVG | 64×64 | Silhouette à épaules hautes, tête basse | placeholder → à fournir | bloquant |
 | `creature-chasseur.svg` | SVG | 64×64 | Félin en extension, corps tendu vers l'avant | placeholder → à fournir | bloquant |
+| `creature-tueur-de-roi.svg` | SVG | 64×64 | Silhouette effilée, encapuchonnée, tendue vers l'avant | placeholder → à fournir | bloquant |
+| `creature-fuyard.svg` | SVG | 64×64 | Petit herbivore ramassé, pattes fines, corps allongé | placeholder → à fournir | bloquant |
 
 > Les placeholders en place sont des silhouettes distinctes par leurs proportions
 > et leur posture : le jeu est intégralement lisible sans les dessins finaux,
@@ -133,3 +133,6 @@ parchemin, pas d'aplat de couleur vive.
   ou remplacé par un placeholder géométrique jouable.
 - **À fournir pour la finition** : les 6 silhouettes de créature, les 16 médaillons
   de carte, le dos de pioche, le logo et le favicon — soit **25 fichiers**.
+- Le plateau fait 16×16 : une silhouette est rendue autour de 38 px de côté en
+  1440×900. Elle doit rester lisible à cette taille — c'est le glyphe qui porte
+  l'identité, la silhouette ne fait que donner la masse et la posture.

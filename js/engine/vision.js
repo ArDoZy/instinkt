@@ -9,7 +9,7 @@
 import { INSTINCTS } from './constants.js';
 import { GLOBALS, globalFor } from './effects.js';
 import { stats } from './creatures.js';
-import { ALL_CELLS, dist, neighbors8 } from './geometry.js';
+import { H, W, dist, idx, neighbors8, xOf, yOf } from './geometry.js';
 
 /** Cases perçues par un Territorial : sa zone plus le halo qui la borde (§4). */
 export function territorialSight(creature) {
@@ -32,8 +32,18 @@ export function visibleCells(state, creature) {
     }
     return sight;
   }
+  // On ne balaie que le carré de vision, pas tout le plateau : sur 16×16 la
+  // différence compte, cette fonction étant appelée pour chaque créature.
   const radius = stats(state, creature).vision;
-  return new Set(ALL_CELLS.filter((c) => dist(c, creature.cell) <= radius));
+  const cx = xOf(creature.cell);
+  const cy = yOf(creature.cell);
+  const seen = new Set();
+  for (let y = Math.max(0, cy - radius); y <= Math.min(H - 1, cy + radius); y++) {
+    for (let x = Math.max(0, cx - radius); x <= Math.min(W - 1, cx + radius); x++) {
+      seen.add(idx(x, y));
+    }
+  }
+  return seen;
 }
 
 export function canSee(state, creature, cell) {
