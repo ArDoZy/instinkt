@@ -17,6 +17,8 @@ import {
   applyCard,
   createGame,
   dist,
+  H,
+  W,
   getEffect,
   hasEffect,
   legalTargets,
@@ -67,12 +69,13 @@ describe('Ciblage', () => {
 
   it('le carré 2×2 tient entièrement sur la grille', () => {
     const state = flatGame();
-    put(state, 1, INSTINCTS.CHASSEUR, 7, 7);
+    put(state, 1, INSTINCTS.CHASSEUR, 15, 15);
     const cibles = legalTargets(state, 0, 'panique_collective');
+    // Une créature dans le coin n'est couverte que par un seul carré.
     equal(cibles.length, 1);
-    deepEqual(squareCells(cibles[0].cell).includes(at(7, 7)), true);
-    for (const cible of legalTargets(state, 0, 'panique_collective')) {
-      for (const cell of squareCells(cible.cell)) assert(cell >= 0 && cell < 64);
+    assert(squareCells(cibles[0].cell).includes(at(15, 15)));
+    for (const cible of cibles) {
+      for (const cell of squareCells(cible.cell)) assert(cell >= 0 && cell < W * H);
     }
   });
 
@@ -83,7 +86,7 @@ describe('Ciblage', () => {
     const cells = legalTargets(state, 0, 'appat').map((t) => t.cell);
     assert(!cells.includes(at(0, 0)), 'pas sur une créature');
     assert(!cells.includes(at(1, 1)), 'pas sur la montagne');
-    equal(cells.length, 62);
+    equal(cells.length, W * H - 2, 'toutes les autres cases');
   });
 });
 
@@ -113,12 +116,13 @@ describe('Manipulation des instincts', () => {
     const c = put(state, 0, INSTINCTS.CHASSEUR, 3, 3);
     play(state, 0, 'terrain_sacre', { creatureId: c.id });
     equal(c.instinct, INSTINCTS.TERRITORIAL);
-    equal(c.zone.length, 64, 'toute la région de plaine');
+    equal(c.zone.length, W * H, 'toute la région de plaine');
   });
 
   it('Panique Collective ne dure que 2 tours et rend l’instinct mémorisé', () => {
     let state = flatGame();
-    put(state, 0, INSTINCTS.FUYARD, 0, 0);
+    put(state, 0, INSTINCTS.ROI, 0, 0);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
     const victime = put(state, 1, INSTINCTS.CHASSEUR, 6, 6);
     state.players[0].energy = 10;
     state.players[0].hand = ['panique_collective'];
@@ -153,13 +157,26 @@ describe('Manipulation des instincts', () => {
 
   it('Obsession mémorise l’instinct du moment', () => {
     const state = flatGame();
-    const allie = put(state, 0, INSTINCTS.FUYARD, 0, 0);
-    const ennemi = put(state, 1, INSTINCTS.DOMINANT, 7, 7);
+    const allie = put(state, 0, INSTINCTS.PROTECTEUR, 0, 0);
+    const ennemi = put(state, 1, INSTINCTS.TUEUR_DE_ROI, 7, 7);
     play(state, 0, 'obsession', { creatureId: ennemi.id, allyId: allie.id });
     const effet = getEffect(ennemi, EFFECTS.OBSESSION);
     equal(effet.targetId, allie.id);
-    equal(effet.previousInstinct, INSTINCTS.DOMINANT);
+    equal(effet.previousInstinct, INSTINCTS.TUEUR_DE_ROI);
     equal(effet.remaining, null, 'permanente jusqu’à la mort de la cible');
+  });
+
+  it('aucune de ces cartes ne peut viser un Roi', () => {
+    const state = flatGame();
+    const roiAllie = put(state, 0, INSTINCTS.ROI, 0, 0);
+    const roiAdverse = put(state, 1, INSTINCTS.ROI, 15, 15);
+    for (const carte of ['retour_instinct_primordial', 'terrain_sacre', 'peur_devorante', 'obsession']) {
+      const cibles = legalTargets(state, 0, carte).map((t) => t.creatureId);
+      assert(!cibles.includes(roiAllie.id) && !cibles.includes(roiAdverse.id), carte);
+    }
+    // Panique Collective laisse le Roi indemne dans son carré.
+    play(state, 0, 'panique_collective', { cell: at(14, 14) });
+    equal(roiAdverse.instinct, INSTINCTS.ROI);
   });
 });
 
@@ -300,9 +317,10 @@ describe('Pioche et main', () => {
   it('pioche une carte par manche et cycle le deck', () => {
     let state = createGame({ seed: 3, decks: [deck, deck] });
     state.phase = PHASES.ACTIONS;
+    state.round = 1;
     state.creatures = [];
-    put(state, 0, INSTINCTS.FUYARD, 0, 0);
-    put(state, 1, INSTINCTS.FUYARD, 7, 7);
+    put(state, 0, INSTINCTS.ROI, 0, 0);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
     state.activePlayer = 0;
 
     const avant = state.players[1].draw.length;
@@ -314,7 +332,7 @@ describe('Pioche et main', () => {
   it('une carte jouée retourne en bas de la pioche', () => {
     let state = flatGame({ decks: [deck, deck] });
     put(state, 0, INSTINCTS.CHASSEUR, 0, 0);
-    put(state, 1, INSTINCTS.CHASSEUR, 7, 7);
+    put(state, 1, INSTINCTS.CHASSEUR, 15, 15);
     state.players[0].hand = ['frenesie'];
     state.players[0].energy = 10;
     const pioche = state.players[0].draw.length;
@@ -331,8 +349,8 @@ describe('Pioche et main', () => {
 
   it('main pleine : le joueur pioche puis doit défausser', () => {
     let state = flatGame({ decks: [deck, deck] });
-    put(state, 0, INSTINCTS.FUYARD, 0, 0);
-    put(state, 1, INSTINCTS.FUYARD, 7, 7);
+    put(state, 0, INSTINCTS.ROI, 0, 0);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
     state.players[1].hand = deck.slice(0, 4);
     state.activePlayer = 0;
 

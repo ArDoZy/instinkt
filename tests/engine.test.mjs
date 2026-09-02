@@ -9,6 +9,8 @@ import {
   BIOMES,
   CARDS,
   INSTINCT_LIST,
+  INSTINCTS,
+  SUMMONABLE_INSTINCTS,
   createRng,
   rngFloat,
   rngInt,
@@ -108,13 +110,13 @@ describe('Géométrie', () => {
     equal(neighbors4(idx(0, 0)).length, 2);
     equal(neighbors8(idx(0, 0)).length, 3);
     equal(neighbors8(idx(3, 3)).length, 8);
-    equal(neighbors8(idx(7, 7)).length, 3);
+    equal(neighbors8(idx(W - 1, H - 1)).length, 3);
   });
 
-  it('les moitiés de plateau sont 0-3 et 4-7', () => {
-    equal(halfOfCell(idx(0, 3)), 0);
-    equal(halfOfCell(idx(0, 4)), 1);
-    equal(ALL_CELLS.filter((c) => halfOfCell(c) === 0).length, 32);
+  it('les moitiés de plateau se partagent à mi-hauteur', () => {
+    equal(halfOfCell(idx(0, H / 2 - 1)), 0);
+    equal(halfOfCell(idx(0, H / 2)), 1);
+    equal(ALL_CELLS.filter((c) => halfOfCell(c) === 0).length, (W * H) / 2);
   });
 });
 
@@ -140,12 +142,13 @@ describe('Génération de plateau', () => {
     }
   });
 
-  it('laisse au moins 8 cases libres par moitié', () => {
+  it('laisse assez de cases libres dans chaque moitié', () => {
     for (const seed of SAMPLE_SEEDS) {
       const { board } = generateBoard(createRng(seed));
       const halves = [0, 0];
       for (const c of ALL_CELLS) if (isPassableCell(board, c)) halves[halfOfCell(c)]++;
-      assert(halves[0] >= 8 && halves[1] >= 8, `graine ${seed}: ${halves.join('/')}`);
+      const seuil = BALANCE.board.minFreeCellsPerHalf;
+      assert(halves[0] >= seuil && halves[1] >= seuil, `graine ${seed}: ${halves.join('/')}`);
     }
   });
 
@@ -187,7 +190,7 @@ describe('Génération de plateau', () => {
 
   it('détecte un plateau coupé en deux', () => {
     const wall = { width: W, height: H, tiles: new Array(W * H).fill(BIOMES.PLAINE) };
-    for (let x = 0; x < W; x++) wall.tiles[idx(x, 3)] = BIOMES.MONTAGNE;
+    for (let x = 0; x < W; x++) wall.tiles[idx(x, H / 2 - 1)] = BIOMES.MONTAGNE;
     assert(!isFullyConnected(wall), 'un mur complet devrait déconnecter');
     assert(!validateBoard(wall).ok);
   });
@@ -204,7 +207,7 @@ describe('Régions de biome', () => {
   });
 
   it('deux taches du même biome séparées font deux régions', () => {
-    const board = withBiome(flat, [idx(0, 0), idx(7, 7)], BIOMES.FORET);
+    const board = withBiome(flat, [idx(0, 0), idx(W - 1, H - 1)], BIOMES.FORET);
     const { regions } = computeRegions(board);
     const forests = regions.filter((r) => r.biome === BIOMES.FORET);
     equal(forests.length, 2, 'deux taches distinctes');
@@ -320,11 +323,19 @@ describe('State', () => {
 });
 
 describe('Tables d’équilibrage', () => {
-  it('décrit les 6 instincts', () => {
+  it('décrit chaque instinct', () => {
     for (const instinct of INSTINCT_LIST) {
       const s = BALANCE.creatures[instinct];
       assert(s, `stats manquantes pour ${instinct}`);
-      assert(s.cost >= 1 && s.hp > 0 && s.speed >= 1, `stats invalides pour ${instinct}`);
+      assert(s.hp > 0 && s.speed >= 1, `stats invalides pour ${instinct}`);
+    }
+  });
+
+  it('le Roi n’est pas invocable', () => {
+    assert(!SUMMONABLE_INSTINCTS.includes(INSTINCTS.ROI), 'le Roi se pose, il ne s’invoque pas');
+    assert(!SUMMONABLE_INSTINCTS.includes(INSTINCTS.FUYARD), 'la panique est un état, pas une invocation');
+    for (const instinct of SUMMONABLE_INSTINCTS) {
+      assert(BALANCE.creatures[instinct].cost >= 1, `coût manquant pour ${instinct}`);
     }
   });
 

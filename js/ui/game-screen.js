@@ -11,6 +11,7 @@ import {
   BIOME_META,
   CARDS_BY_ID,
   INSTINCTS,
+  INSTINCT_LABEL,
   creatureById,
   playableCards,
   stats,
@@ -21,22 +22,13 @@ import { cardBack, cardFace } from './card-view.js';
 import { createBoardView } from './board-view.js';
 import { el, qs, qsa, setChildren } from './dom.js';
 
-const INSTINCT_LABEL = {
-  [INSTINCTS.FUYARD]: 'Fuyard',
-  [INSTINCTS.CHAROGNARD]: 'Charognard',
-  [INSTINCTS.PROTECTEUR]: 'Protecteur',
-  [INSTINCTS.TERRITORIAL]: 'Territorial',
-  [INSTINCTS.DOMINANT]: 'Dominant',
-  [INSTINCTS.CHASSEUR]: 'Chasseur',
-};
-
 const INSTINCT_RULE = {
-  [INSTINCTS.FUYARD]: "N'attaque jamais. S'éloigne de l'ennemi le plus proche qu'il voit.",
-  [INSTINCTS.CHAROGNARD]: 'Traque les blessés (sous 50 % de PV), sinon rejoint le dernier combat perçu.',
+  [INSTINCTS.ROI]: 'Fuit le combat et riposte quand on le frappe. Ne se régénère jamais : ce qu’il perd est perdu.',
   [INSTINCTS.PROTECTEUR]: "S'interpose et absorbe les dégâts destinés à l'allié qu'il protège.",
   [INSTINCTS.TERRITORIAL]: 'Ne quitte jamais sa région. Voit sa région et ce qui la borde.',
-  [INSTINCTS.DOMINANT]: 'Ne frappe que fuyards et charognards. Encaisse le reste sans riposter.',
   [INSTINCTS.CHASSEUR]: "Fonce sur l'ennemi le plus proche dans sa vision.",
+  [INSTINCTS.TUEUR_DE_ROI]: 'Sait toujours où est le Roi adverse et va droit dessus. Ne frappe que lui.',
+  [INSTINCTS.FUYARD]: "N'attaque plus rien et s'éloigne de l'ennemi le plus proche qu'elle voit.",
 };
 
 export function createGameScreen(root, handlers) {
@@ -108,6 +100,8 @@ export function createGameScreen(root, handlers) {
         'dl',
         { class: 'stats-globales' },
         ligne('Manche', state.round),
+        ligne('Roi — Joueur 1', pvDuRoi(state, 0)),
+        ligne('Roi — Joueur 2', pvDuRoi(state, 1)),
         ligne('Créatures', `${countCreatures(state, 0)} / ${countCreatures(state, 1)}`),
         state.round >= BALANCE.suddenDeath.startRound ? ligne('Mort subite', 'active') : null
       )
@@ -136,6 +130,9 @@ export function createGameScreen(root, handlers) {
         chiffre('VUE', creature.instinct === INSTINCTS.TERRITORIAL ? 'zone' : s.vision)
       ),
       el('p', { class: 'regle' }, INSTINCT_RULE[creature.instinct]),
+      creature.instinct === INSTINCTS.ROI
+        ? el('p', { class: 'enjeu' }, 'Sa mort met fin à la partie.')
+        : null,
       el('p', { class: 'terrain' }, `Sur ${biome.label} — vision ${biome.visionMod >= 0 ? '+' : ''}${biome.visionMod}`),
       creature.effects.length
         ? el(
@@ -190,7 +187,7 @@ export function createGameScreen(root, handlers) {
       setChildren(
         barre,
         el('p', { class: 'consigne-placement' },
-          'Chaque joueur pose gratuitement un fuyard. S’il meurt avant que vous n’ayez posé autre chose, vous perdez.')
+          'Chaque joueur pose son Roi. Il fuit le combat, riposte, ne se régénère jamais — et sa mort finit la partie.')
       );
       return;
     }
@@ -258,7 +255,7 @@ export function createGameScreen(root, handlers) {
             dataCategorie: card.category,
             dataActive: ui.pendingCard === entry.cardId ? '' : null,
             disabled: !enDefausse && !entry.legal,
-            title: entry.legal || enDefausse ? card.text : raisonRefus(entry, state),
+            title: infobulle(entry, state, enDefausse),
             style: { '--i': i - (jouables.length - 1) / 2 },
             onclick: () => (enDefausse ? handlers.onDiscard(entry.cardId) : handlers.onCardClick(entry.cardId)),
             onmouseenter: () => handlers.onCardHover(entry.cardId),
@@ -270,6 +267,12 @@ export function createGameScreen(root, handlers) {
       ...Array.from({ length: BALANCE.hand.max - player.hand.length }, () => el('div', { class: 'carte vide' }))
     );
   }
+
+  /** Texte complet de la carte, avec la nuance sur le Roi. */
+  const infobulle = (entry, state, enDefausse) => {
+    if (!entry.legal && !enDefausse) return raisonRefus(entry, state);
+    return entry.card.mindControl ? `${entry.card.text}\nSans effet sur un Roi.` : entry.card.text;
+  };
 
   const raisonRefus = (entry, state) =>
     !entry.affordable
@@ -328,6 +331,11 @@ export function createGameScreen(root, handlers) {
   }
 
   const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+
+  const pvDuRoi = (state, player) => {
+    const roi = state.creatures.find((c) => c.hp > 0 && c.owner === player && c.instinct === INSTINCTS.ROI);
+    return roi ? `${roi.hp}/${roi.maxHp}` : '—';
+  };
 
   const countCreatures = (state, player) =>
     state.creatures.filter((c) => c.owner === player && c.hp > 0).length;

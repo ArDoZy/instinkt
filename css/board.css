@@ -26,8 +26,8 @@
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(8, 1fr);
+  grid-template-columns: repeat(var(--n, 16), 1fr);
+  grid-template-rows: repeat(var(--n, 16), 1fr);
 }
 
 .case {
@@ -156,8 +156,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 12.5%;
-  height: 12.5%;
+  width: calc(100% / var(--n, 16));
+  height: calc(100% / var(--n, 16));
   transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%));
 }
 
@@ -353,3 +353,17 @@
   outline-offset: -3px;
   z-index: 1;
 }
+
+/* Le Roi doit se repérer d'un coup d'œil sur un plateau de 16×16. */
+.creature[data-instinct='roi']::before {
+  content: '';
+  position: absolute;
+  inset: 2%;
+  border: 2px solid var(--ambre);
+  border-radius: 3px;
+  opacity: 0.9;
+}
+.creature[data-instinct='roi'] .silhouette { inset: 6%; }
+
+/* Le tueur de Roi : une pointe discrète pour le distinguer d'un chasseur. */
+.creature[data-instinct='tueurDeRoi'] .glyphe { width: 52%; }

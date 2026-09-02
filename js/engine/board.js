@@ -172,9 +172,13 @@ function growBoard(rng) {
  * @returns {{ board: Board, attempts:number }}
  */
 export function generateBoard(rng) {
+  const rejets = {};
   for (let attempt = 1; attempt <= BALANCE.board.maxGenerationAttempts; attempt++) {
     const board = growBoard(rng);
-    if (validateBoard(board).ok) return { board, attempts: attempt };
+    const verdict = validateBoard(board);
+    if (verdict.ok) return { board, attempts: attempt, rejets };
+    const cle = verdict.reason.split('=')[0];
+    rejets[cle] = (rejets[cle] ?? 0) + 1;
   }
   throw new Error('generateBoard: aucun plateau valide après ' + BALANCE.board.maxGenerationAttempts + ' tentatives');
 }

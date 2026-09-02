@@ -7,7 +7,7 @@
  * sans jamais recalculer de logique.
  */
 
-import { BALANCE, CARDS_BY_ID, INSTINCTS } from './constants.js';
+import { BALANCE, CARDS_BY_ID, INSTINCTS, INSTINCT_LABEL, SUMMONABLE_INSTINCTS } from './constants.js';
 import { EFFECTS, tickCreatureEffects, tickGlobalEffects } from './effects.js';
 import { changeInstinct, createCreature } from './creatures.js';
 import { applyCard, isLegalTarget, legalTargets } from './cards.js';
@@ -69,7 +69,7 @@ export function applyAction(state, action) {
 // Placement initial
 // ---------------------------------------------------------------------------
 
-/** Joueur à qui c'est de placer son fuyard de départ. */
+/** Joueur à qui c'est de placer son Roi. */
 export function playerToPlace(state) {
   if (state.phase !== PHASES.PLACEMENT) return null;
   const placed = new Set(state.creatures.map((c) => c.owner));
@@ -85,9 +85,9 @@ function placeStarter(state, { player, cell }) {
     throw new IllegalAction('Case de placement invalide.');
   }
 
-  const creature = createCreature(state, { owner: player, instinct: INSTINCTS.FUYARD, cell });
+  const creature = createCreature(state, { owner: player, instinct: INSTINCTS.ROI, cell });
   pushEvent(state, 'summon', { id: creature.id, owner: player, instinct: creature.instinct, cell });
-  logLine(state, `Joueur ${player + 1} place son fuyard de départ.`);
+  logLine(state, `Joueur ${player + 1} place son Roi.`);
 
   if (playerToPlace(state) === null) {
     state.phase = PHASES.ACTIONS;
@@ -113,10 +113,10 @@ function requireActionPhase(state, player) {
 export function summonOptions(state, player) {
   const energy = state.players[player].energy;
   const cells = summonableCells(state, player);
-  return Object.entries(BALANCE.creatures).map(([instinct, base]) => ({
+  return SUMMONABLE_INSTINCTS.map((instinct) => ({
     instinct,
-    cost: base.cost,
-    affordable: base.cost <= energy,
+    cost: BALANCE.creatures[instinct].cost,
+    affordable: BALANCE.creatures[instinct].cost <= energy,
     alreadySummoned: state.summonedInstinctsThisTurn.includes(instinct),
     hasRoom: cells.length > 0,
     get legal() {
@@ -128,7 +128,9 @@ export function summonOptions(state, player) {
 function summon(state, { player, instinct, cell }) {
   requireActionPhase(state, player);
   const base = BALANCE.creatures[instinct];
-  if (!base) throw new IllegalAction(`Instinct inconnu : ${instinct}`);
+  if (!base || !SUMMONABLE_INSTINCTS.includes(instinct)) {
+    throw new IllegalAction(`Instinct non invocable : ${instinct}`);
+  }
   if (state.summonedInstinctsThisTurn.includes(instinct)) {
     throw new IllegalAction('Un seul exemplaire de cet instinct par tour.');
   }
@@ -144,7 +146,7 @@ function summon(state, { player, instinct, cell }) {
 
   pushEvent(state, 'energy', { player, energy: state.players[player].energy, delta: -base.cost });
   pushEvent(state, 'summon', { id: creature.id, owner: player, instinct, cell });
-  logLine(state, `Joueur ${player + 1} invoque un ${instinct} (−${base.cost}⚡).`);
+  logLine(state, `Joueur ${player + 1} invoque un ${INSTINCT_LABEL[instinct]} (−${base.cost}⚡).`);
 }
 
 /** Cartes jouables : en main, payables, et disposant d'au moins une cible (§6.9). */
@@ -209,7 +211,11 @@ function beginTurn(state) {
   state.pendingDiscard = null;
 
   const before = player.energy;
-  player.energy = Math.min(BALANCE.energy.max, player.energy + BALANCE.energy.perTurn);
+  // Ouvrir la partie est un avantage de tempo : la première rente du joueur
+  // qui ouvre est réduite d'autant.
+  const rente =
+    state.round === 1 ? BALANCE.energy.perTurn - BALANCE.energy.openingPenalty : BALANCE.energy.perTurn;
+  player.energy = Math.min(BALANCE.energy.max, player.energy + rente);
   pushEvent(state, 'energy', { player: player.id, energy: player.energy, delta: player.energy - before });
 
   if (player.draw.length) {

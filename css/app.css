@@ -179,8 +179,8 @@ button.primaire:hover:not(:disabled) { background: var(--parchemin); border-colo
   height: 100dvh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 10px;
-  padding: 10px clamp(10px, 2vw, 22px) 14px;
+  gap: 8px;
+  padding: 8px clamp(10px, 2vw, 22px) 10px;
 }
 
 .aire {
@@ -195,7 +195,7 @@ button.primaire:hover:not(:disabled) { background: var(--parchemin); border-colo
   gap: 8px;
   border: 1px solid var(--encre-trait);
   background: var(--encre-clair);
-  padding: 8px 14px;
+  padding: 6px 14px;
 }
 .bandeau.adversaire { grid-auto-flow: column; align-items: center; justify-content: start; gap: 20px; }
 
@@ -344,3 +344,5 @@ button.primaire:hover:not(:disabled) { background: var(--parchemin); border-colo
 @media (prefers-reduced-motion: reduce) {
   .energie .cristaux .se-remplit { animation: none; }
 }
+
+.fiche .enjeu { margin: 0 0 6px; color: var(--ambre); font-weight: 600; }

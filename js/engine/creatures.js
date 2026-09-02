@@ -5,9 +5,19 @@
 import { BALANCE, BIOME_META, INSTINCTS } from './constants.js';
 import { EFFECTS, GLOBALS, getEffect, globalFor, hasEffect } from './effects.js';
 
-/** Instincts que le Dominant accepte de frapper (§4). */
-export const DOMINANT_PREY = [INSTINCTS.FUYARD, INSTINCTS.CHAROGNARD];
-export const isDominantPrey = (c) => DOMINANT_PREY.includes(c.instinct);
+export const isKing = (c) => c.instinct === INSTINCTS.ROI;
+export const isRegicide = (c) => c.instinct === INSTINCTS.TUEUR_DE_ROI;
+
+/**
+ * Le Roi est intouchable par tout ce qui détourne un comportement : aucun
+ * changement d'instinct, aucune obsession, aucune panique, aucun leurre. Il
+ * n'obéit qu'à sa propre règle — éviter le combat et riposter.
+ */
+export const isMindControllable = (c) => !isKing(c);
+
+/** Le Roi d'un joueur, ou null s'il est mort. */
+export const kingOf = (state, owner) =>
+  state.creatures.find((c) => c.hp > 0 && c.owner === owner && isKing(c)) ?? null;
 
 /**
  * Crée une créature et l'ajoute au state. L'identifiant est croissant : il sert
@@ -58,7 +68,7 @@ export function stats(state, creature) {
 
   const luneDeSang = globalFor(state, GLOBALS.LUNE_DE_SANG, creature);
   const beneficieDeLaLune =
-    creature.instinct === INSTINCTS.CHASSEUR || creature.instinct === INSTINCTS.DOMINANT;
+    creature.instinct === INSTINCTS.CHASSEUR || creature.instinct === INSTINCTS.TUEUR_DE_ROI;
   if (luneDeSang && beneficieDeLaLune) {
     atk += BALANCE.effects.luneDeSang.atk;
     speed += BALANCE.effects.luneDeSang.speed;
@@ -77,7 +87,7 @@ export function stats(state, creature) {
   };
 }
 
-/** Une créature est-elle sous la moitié de ses PV max ? (cible du charognard) */
+/** Une créature est-elle sous la moitié de ses PV max ? (marqueur visible) */
 export const isWounded = (c) => c.hp < c.maxHp / 2;
 
 /**

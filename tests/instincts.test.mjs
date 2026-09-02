@@ -21,6 +21,7 @@ import {
   dist,
   isValidPrey,
   legalActions,
+  legalTargets,
   resolveCombat,
   resolveDeaths,
   resolveMovement,
@@ -91,9 +92,8 @@ describe('Chasseur', () => {
   it('avance vers l’ennemi le plus proche et s’arrête à son contact', () => {
     const state = flatGame();
     const chasseur = put(state, 0, INSTINCTS.CHASSEUR, 0, 0);
-    // Un dominant ne voit pas de proie valide dans un chasseur : il reste immobile,
-    // ce qui donne une cible fixe.
-    put(state, 1, INSTINCTS.DOMINANT, 4, 0);
+    // Un territorial dont la zone est sa seule case ne bouge jamais : cible fixe.
+    put(state, 1, INSTINCTS.TERRITORIAL, 4, 0, { zone: [at(4, 0)] });
     resolveMovement(state);
     equal(posOf(chasseur), '2,0', 'vitesse 2');
     resolveMovement(state);
@@ -170,7 +170,7 @@ describe('Territorial', () => {
     const state = flatGame();
     const zone = [at(2, 2)];
     const terri = put(state, 0, INSTINCTS.TERRITORIAL, 2, 2, { zone });
-    const voisin = put(state, 1, INSTINCTS.DOMINANT, 3, 2);
+    const voisin = put(state, 1, INSTINCTS.CHASSEUR, 3, 2);
     combat(state);
     assert(voisin.hp < voisin.maxHp, 'le territorial frappe hors zone sans sortir');
     equal(posOf(terri), '2,2', 'et reste dans sa zone');
@@ -192,76 +192,6 @@ describe('Territorial', () => {
     phase(state);
     equal(voisin.hp, voisin.maxHp, 'il ne frappe pas tant qu’il n’est pas rentré');
     assert(dist(terri.cell, at(1, 1)) < dist(at(5, 5), at(1, 1)), 'il se rapproche de sa zone');
-  });
-});
-
-describe('Charognard', () => {
-  it('ne cible que les créatures sous la moitié de leurs PV', () => {
-    const state = flatGame();
-    const charo = put(state, 0, INSTINCTS.CHAROGNARD, 0, 0);
-    put(state, 1, INSTINCTS.PROTECTEUR, 2, 0); // 14/14 : intact
-    const blesse = put(state, 1, INSTINCTS.PROTECTEUR, 3, 3, { patch: { hp: 5 } });
-    const decision = decide(state, charo);
-    equal(decision.targetId, blesse.id, 'il vise le blessé, pas le plus proche');
-  });
-
-  it('se dirige vers le dernier combat perçu, à défaut de blessé', () => {
-    const state = flatGame();
-    const charo = put(state, 0, INSTINCTS.CHAROGNARD, 0, 0);
-    state.lastCombatCells = [at(3, 0)];
-    const decision = decide(state, charo);
-    deepEqual(decision, { kind: 'cell', cell: at(3, 0) });
-    resolveMovement(state);
-    equal(posOf(charo), '2,0');
-  });
-
-  it('reste immobile sans blessé ni combat mémorisé', () => {
-    const state = flatGame();
-    const charo = put(state, 0, INSTINCTS.CHAROGNARD, 0, 0);
-    put(state, 1, INSTINCTS.PROTECTEUR, 2, 0);
-    equal(decide(state, charo), null);
-  });
-
-  it('frappe n’importe quel ennemi une fois au contact', () => {
-    const state = flatGame();
-    put(state, 0, INSTINCTS.CHAROGNARD, 0, 0);
-    const intact = put(state, 1, INSTINCTS.PROTECTEUR, 1, 0);
-    combat(state);
-    assert(intact.hp < intact.maxHp, 'blessé ou non, au contact il frappe');
-  });
-});
-
-describe('Dominant', () => {
-  it('ne frappe que fuyards et charognards', () => {
-    const state = flatGame();
-    const dominant = put(state, 0, INSTINCTS.DOMINANT, 3, 3);
-    const chasseur = put(state, 1, INSTINCTS.CHASSEUR, 4, 3);
-    equal(isValidPrey(state, dominant, chasseur), false);
-    combat(state);
-    equal(chasseur.hp, chasseur.maxHp, 'il encaisse sans riposter');
-    assert(dominant.hp < dominant.maxHp, 'le chasseur, lui, frappe');
-  });
-
-  it('reste immobile sans proie valide visible', () => {
-    const state = flatGame();
-    const dominant = put(state, 0, INSTINCTS.DOMINANT, 0, 0);
-    put(state, 1, INSTINCTS.CHASSEUR, 3, 0);
-    equal(decide(state, dominant), null);
-  });
-
-  it('sous Hiérarchie Brisée, frappe n’importe quelle voisine, alliée comprise', () => {
-    const state = flatGame();
-    const dominant = put(state, 1, INSTINCTS.DOMINANT, 3, 3);
-    const allie = put(state, 1, INSTINCTS.PROTECTEUR, 4, 3);
-    state.globalEffects.push({
-      kind: GLOBALS.HIERARCHIE_BRISEE,
-      caster: 0,
-      remaining: 2,
-      creatureIds: [dominant.id, allie.id],
-    });
-    equal(isValidPrey(state, dominant, allie), true);
-    combat(state);
-    assert(allie.hp < allie.maxHp, 'il frappe son allié');
   });
 });
 
@@ -308,6 +238,110 @@ describe('Protecteur', () => {
     resolveMovement(state);
     equal(protecteur.protectingId, null, 'aucun allié visible');
     void ennemi;
+  });
+});
+
+describe('Roi', () => {
+  it('fuit l’ennemi le plus proche au lieu de l’affronter', () => {
+    const state = flatGame();
+    const roi = put(state, 0, INSTINCTS.ROI, 3, 3);
+    put(state, 1, INSTINCTS.CHASSEUR, 2, 3);
+    resolveMovement(state);
+    assert(dist(roi.cell, at(2, 3)) > 1, `le Roi s'éloigne : ${posOf(roi)}`);
+  });
+
+  it('n’engage jamais le combat', () => {
+    const state = flatGame();
+    const roi = put(state, 0, INSTINCTS.ROI, 3, 3);
+    // Une créature paniquée n'attaque pas : le Roi n'est donc pas agressé.
+    const voisin = put(state, 1, INSTINCTS.FUYARD, 3, 4);
+    combat(state);
+    equal(voisin.hp, voisin.maxHp, 'il laisse passer qui ne le frappe pas');
+  });
+
+  it('riposte contre qui le frappe', () => {
+    const state = flatGame();
+    const roi = put(state, 0, INSTINCTS.ROI, 3, 3);
+    const agresseur = put(state, 1, INSTINCTS.CHASSEUR, 3, 4);
+    combat(state);
+    assert(roi.hp < roi.maxHp, 'il encaisse le coup');
+    equal(agresseur.hp, agresseur.maxHp - BALANCE.creatures.roi.atk, 'et rend le coup');
+  });
+
+  it('ne riposte que contre son agresseur', () => {
+    const state = flatGame();
+    put(state, 0, INSTINCTS.ROI, 3, 3);
+    const agresseur = put(state, 1, INSTINCTS.CHASSEUR, 3, 4);
+    const spectateur = put(state, 1, INSTINCTS.FUYARD, 2, 3);
+    combat(state);
+    assert(agresseur.hp < agresseur.maxHp, 'l’agresseur prend la riposte');
+    equal(spectateur.hp, spectateur.maxHp, 'le voisin passif est épargné');
+  });
+
+  it('ne se régénère jamais', () => {
+    const state = flatGame();
+    const roi = put(state, 0, INSTINCTS.ROI, 0, 0, { patch: { hp: 20 } });
+    const autre = put(state, 0, INSTINCTS.PROTECTEUR, 5, 5, { patch: { hp: 5 } });
+    combat(state);
+    resolveRegen(state);
+    equal(roi.hp, 20, 'ce qu’il perd est perdu');
+    equal(autre.hp, 6, 'les autres récupèrent normalement');
+  });
+
+  it('est insensible aux cartes qui détournent un comportement', () => {
+    const state = flatGame();
+    const roi = put(state, 1, INSTINCTS.ROI, 3, 3);
+    for (const carte of ['peur_devorante', 'terrain_sacre', 'retour_instinct_primordial', 'obsession']) {
+      const cibles = legalTargets(state, 0, carte).map((t) => t.creatureId);
+      assert(!cibles.includes(roi.id), `${carte} ne devrait pas viser le Roi`);
+    }
+    // Ni l'Appât : rien ne le détourne de sa fuite.
+    state.players[1].lure = { cell: at(5, 3), remaining: 2, caster: 1 };
+    equal(decide(state, roi), null, 'aucun ennemi visible, aucun leurre suivi');
+  });
+});
+
+describe('Tueur de Roi', () => {
+  it('sait toujours où est le Roi adverse, hors de toute vision', () => {
+    const state = flatGame({ biome: BIOMES.JUNGLE });
+    const tueur = put(state, 0, INSTINCTS.TUEUR_DE_ROI, 0, 0);
+    const roi = put(state, 1, INSTINCTS.ROI, 15, 15);
+    equal(decide(state, tueur).targetId, roi.id, 'à travers tout le plateau');
+    resolveMovement(state);
+    assert(dist(tueur.cell, roi.cell) < dist(at(0, 0), roi.cell), 'il s’en rapproche');
+  });
+
+  it('ne frappe que le Roi', () => {
+    const state = flatGame();
+    const tueur = put(state, 0, INSTINCTS.TUEUR_DE_ROI, 3, 3);
+    const garde = put(state, 1, INSTINCTS.PROTECTEUR, 3, 4);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
+    equal(isValidPrey(state, tueur, garde), false);
+    combat(state);
+    // Le protecteur, lui, frappe : seul le tueur s'abstient.
+    assert(garde.hp === garde.maxHp, 'il ignore la garde');
+  });
+
+  it('reste immobile si le Roi adverse est déjà tombé', () => {
+    const state = flatGame();
+    const tueur = put(state, 0, INSTINCTS.TUEUR_DE_ROI, 3, 3);
+    equal(decide(state, tueur), null);
+  });
+
+  it('sous Hiérarchie Brisée, frappe n’importe quelle voisine, alliée comprise', () => {
+    const state = flatGame();
+    const tueur = put(state, 1, INSTINCTS.TUEUR_DE_ROI, 3, 3);
+    const allie = put(state, 1, INSTINCTS.PROTECTEUR, 4, 3);
+    put(state, 0, INSTINCTS.ROI, 15, 15);
+    state.globalEffects.push({
+      kind: GLOBALS.HIERARCHIE_BRISEE,
+      caster: 0,
+      remaining: 2,
+      creatureIds: [tueur.id, allie.id],
+    });
+    equal(isValidPrey(state, tueur, allie), true);
+    combat(state);
+    assert(allie.hp < allie.maxHp, 'il frappe son allié');
   });
 });
 
@@ -408,19 +442,19 @@ describe('Obsession et Appât', () => {
 
   it('retrouve son instinct à la mort de la cible', () => {
     const state = flatGame();
-    const traqueur = put(state, 1, INSTINCTS.DOMINANT, 3, 3);
+    const traqueur = put(state, 1, INSTINCTS.CHASSEUR, 3, 3);
     const proie = put(state, 0, INSTINCTS.PROTECTEUR, 3, 4, { patch: { hp: 1 } });
     addEffect(traqueur, {
       kind: EFFECTS.OBSESSION,
       caster: 0,
       remaining: null,
       targetId: proie.id,
-      previousInstinct: INSTINCTS.DOMINANT,
+      previousInstinct: INSTINCTS.CHASSEUR,
       previousZone: null,
     });
     combat(state);
     equal(traqueur.effects.length, 0, 'l’Obsession tombe');
-    equal(traqueur.instinct, INSTINCTS.DOMINANT);
+    equal(traqueur.instinct, INSTINCTS.CHASSEUR);
   });
 
   it('un fuyard obsédé suit sans jamais frapper', () => {
@@ -519,15 +553,16 @@ describe('Régénération et mort subite', () => {
 
   it('la mort subite monte d’un cran toutes les 10 manches', () => {
     const state = flatGame();
-    equal(suddenDeathDamage({ ...state, round: 29 }), 0);
-    equal(suddenDeathDamage({ ...state, round: 30 }), 1);
-    equal(suddenDeathDamage({ ...state, round: 39 }), 1);
-    equal(suddenDeathDamage({ ...state, round: 40 }), 2);
+    const { startRound, step } = BALANCE.suddenDeath;
+    equal(suddenDeathDamage({ ...state, round: startRound - 1 }), 0);
+    equal(suddenDeathDamage({ ...state, round: startRound }), 1);
+    equal(suddenDeathDamage({ ...state, round: startRound + step - 1 }), 1);
+    equal(suddenDeathDamage({ ...state, round: startRound + step }), 2);
   });
 
   it('elle finit la partie', () => {
     const state = flatGame();
-    state.round = 30;
+    state.round = BALANCE.suddenDeath.startRound;
     put(state, 0, INSTINCTS.FUYARD, 0, 0, { patch: { hp: 1 } });
     put(state, 1, INSTINCTS.FUYARD, 7, 7);
     state.events = [];
@@ -539,22 +574,50 @@ describe('Régénération et mort subite', () => {
 });
 
 describe('Fin de partie', () => {
-  it('un joueur à 0 créature perd immédiatement', () => {
+  it('le joueur dont le Roi tombe perd immédiatement', () => {
     const state = flatGame();
-    // Un protecteur sans allié visible reste immobile : il ne s'échappe pas.
-    put(state, 0, INSTINCTS.PROTECTEUR, 3, 3, { patch: { hp: 1 } });
-    put(state, 1, INSTINCTS.CHASSEUR, 3, 4);
-    const after = applyAction({ ...state, phase: PHASES.ACTIONS }, { type: ACTIONS.END_TURN, player: 0 });
+    // Acculé dans le coin, le Roi ne peut plus s'éloigner : le coup porte.
+    put(state, 0, INSTINCTS.ROI, 0, 0, { patch: { hp: 1 } });
+    put(state, 1, INSTINCTS.ROI, 12, 12);
+    put(state, 1, INSTINCTS.CHASSEUR, 1, 1);
+    const after = applyAction(state, { type: ACTIONS.END_TURN, player: 0 });
     equal(after.winner, 1);
+    equal(after.endedReason, 'regicide');
     equal(after.phase, PHASES.GAME_OVER);
   });
 
-  it('les deux à 0 lors de la même phase : match nul', () => {
+  it('la partie continue tant que les deux Rois tiennent', () => {
     const state = flatGame();
-    put(state, 0, INSTINCTS.CHASSEUR, 3, 3, { patch: { hp: 1 } });
-    put(state, 1, INSTINCTS.CHASSEUR, 3, 4, { patch: { hp: 1 } });
+    put(state, 0, INSTINCTS.ROI, 3, 3);
+    put(state, 1, INSTINCTS.ROI, 12, 12);
+    const after = applyAction(state, { type: ACTIONS.END_TURN, player: 0 });
+    equal(after.winner, null, 'perdre des créatures ne fait pas perdre la partie');
+  });
+
+  it('les deux Rois tombés lors de la même phase : match nul', () => {
+    const state = flatGame();
+    // Les deux Rois sont acculés dans un coin, chacun avec un tueur au contact.
+    put(state, 0, INSTINCTS.ROI, 0, 0, { patch: { hp: 1 } });
+    put(state, 1, INSTINCTS.TUEUR_DE_ROI, 1, 1);
+    put(state, 1, INSTINCTS.ROI, 15, 15, { patch: { hp: 1 } });
+    put(state, 0, INSTINCTS.TUEUR_DE_ROI, 14, 14);
     const after = applyAction(state, { type: ACTIONS.END_TURN, player: 0 });
     equal(after.winner, 'draw');
+  });
+
+  it('un Roi traqué finit par être acculé et rattrapé', () => {
+    let state = flatGame();
+    const roi = put(state, 0, INSTINCTS.ROI, 8, 4);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
+    put(state, 1, INSTINCTS.TUEUR_DE_ROI, 8, 6);
+
+    // La traque prend du temps — c'est voulu — mais elle aboutit.
+    for (let tour = 0; tour < 25 && state.winner === null; tour++) {
+      const joueur = state.activePlayer;
+      state = applyAction(state, { type: ACTIONS.END_TURN, player: joueur });
+    }
+    const traque = state.creatures.find((c) => c.id === roi.id);
+    assert(traque === undefined || traque.hp < roi.maxHp, 'le Roi a fini par encaisser');
   });
 });
 
@@ -563,8 +626,8 @@ describe('applyAction', () => {
 
   it('ne modifie jamais le state d’entrée', () => {
     const state = flatGame();
-    put(state, 0, INSTINCTS.FUYARD, 0, 0);
-    put(state, 1, INSTINCTS.FUYARD, 7, 7);
+    put(state, 0, INSTINCTS.ROI, 0, 0);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
     const snapshot = saveState(state);
     applyAction(state, { type: ACTIONS.END_TURN, player: 0 });
     equal(saveState(state), snapshot, 'pureté du moteur');
@@ -572,8 +635,9 @@ describe('applyAction', () => {
 
   it('est déterministe', () => {
     const state = flatGame();
-    put(state, 0, INSTINCTS.CHASSEUR, 0, 0);
-    put(state, 1, INSTINCTS.FUYARD, 5, 5);
+    put(state, 0, INSTINCTS.ROI, 0, 0);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
+    put(state, 0, INSTINCTS.CHASSEUR, 2, 2);
     const a = applyAction(state, { type: ACTIONS.END_TURN, player: 0 });
     const b = applyAction(state, { type: ACTIONS.END_TURN, player: 0 });
     equal(saveState(a), saveState(b));
@@ -590,7 +654,11 @@ describe('applyAction', () => {
     equal(state.phase, PHASES.ACTIONS);
     equal(state.activePlayer, 1 - first, 'le second à placer joue en premier');
     equal(state.round, 1);
-    equal(state.players[state.activePlayer].energy, BALANCE.energy.perTurn);
+    // Le joueur qui ouvre touche une rente réduite : c'est sa compensation.
+    equal(
+      state.players[state.activePlayer].energy,
+      BALANCE.energy.perTurn - BALANCE.energy.openingPenalty
+    );
   });
 
   it('refuse une invocation illégale', () => {
@@ -604,30 +672,31 @@ describe('applyAction', () => {
         if (e instanceof IllegalAction) refus++;
       }
     };
-    tente({ type: ACTIONS.SUMMON, player: 0, instinct: INSTINCTS.CHASSEUR, cell: at(0, 7) });
-    tente({ type: ACTIONS.SUMMON, player: 1, instinct: INSTINCTS.CHASSEUR, cell: at(0, 7) });
+    tente({ type: ACTIONS.SUMMON, player: 0, instinct: INSTINCTS.CHASSEUR, cell: at(0, 15) });
+    tente({ type: ACTIONS.SUMMON, player: 1, instinct: INSTINCTS.CHASSEUR, cell: at(0, 15) });
     tente({ type: ACTIONS.SUMMON, player: 0, instinct: 'licorne', cell: at(0, 0) });
-    equal(refus, 3, 'moitié adverse, mauvais joueur, instinct inconnu');
+    tente({ type: ACTIONS.SUMMON, player: 0, instinct: INSTINCTS.ROI, cell: at(0, 0) });
+    equal(refus, 4, 'moitié adverse, mauvais joueur, instinct inconnu, Roi non invocable');
   });
 
   it('n’autorise qu’un exemplaire d’un instinct par tour', () => {
     let state = flatGame();
     state.players[0].energy = 10;
-    state = applyAction(state, { type: ACTIONS.SUMMON, player: 0, instinct: INSTINCTS.FUYARD, cell: at(0, 0) });
+    state = applyAction(state, { type: ACTIONS.SUMMON, player: 0, instinct: INSTINCTS.CHASSEUR, cell: at(0, 0) });
     let refuse = false;
     try {
-      applyAction(state, { type: ACTIONS.SUMMON, player: 0, instinct: INSTINCTS.FUYARD, cell: at(1, 0) });
+      applyAction(state, { type: ACTIONS.SUMMON, player: 0, instinct: INSTINCTS.CHASSEUR, cell: at(1, 0) });
     } catch (e) {
       refuse = e instanceof IllegalAction;
     }
     assert(refuse);
-    equal(state.players[0].energy, 10 - BALANCE.creatures[INSTINCTS.FUYARD].cost);
+    equal(state.players[0].energy, 10 - BALANCE.creatures[INSTINCTS.CHASSEUR].cost);
   });
 
   it('plafonne l’énergie à 10 et empile les événements', () => {
     let state = flatGame();
-    put(state, 0, INSTINCTS.FUYARD, 0, 0);
-    put(state, 1, INSTINCTS.FUYARD, 7, 7);
+    put(state, 0, INSTINCTS.ROI, 0, 0);
+    put(state, 1, INSTINCTS.ROI, 15, 15);
     state.players[1].energy = 9;
     state = applyAction(state, { type: ACTIONS.END_TURN, player: 0 });
     equal(state.players[1].energy, BALANCE.energy.max);
