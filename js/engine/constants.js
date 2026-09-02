@@ -87,14 +87,20 @@ export const BALANCE = {
   /** Rayon de recherche d'une case de repli lors de Poussée Volcanique. */
   volcanicPushRadius: 2,
 
+  /**
+   * Stats des créatures. Le coût reflète la capacité à *engager* le combat,
+   * pas la puissance brute : un instinct qui refuse d'attaquer la plupart des
+   * cibles (dominant, charognard) est bon marché ; un instinct qui fonce
+   * toujours (chasseur) est cher. Voir tools/balance.mjs.
+   */
   creatures: {
     [INSTINCTS.FUYARD]: { cost: 1, hp: 6, atk: 0, speed: 2, vision: 3 },
-    [INSTINCTS.CHAROGNARD]: { cost: 2, hp: 8, atk: 2, speed: 2, vision: 4 },
-    [INSTINCTS.PROTECTEUR]: { cost: 2, hp: 14, atk: 2, speed: 1, vision: 3 },
+    [INSTINCTS.CHAROGNARD]: { cost: 2, hp: 9, atk: 3, speed: 2, vision: 4 },
+    [INSTINCTS.PROTECTEUR]: { cost: 3, hp: 14, atk: 2, speed: 1, vision: 3 },
     // Le territorial voit sa région + son halo ; `vision` n'est pas utilisée.
-    [INSTINCTS.TERRITORIAL]: { cost: 3, hp: 16, atk: 4, speed: 1, vision: 0 },
-    [INSTINCTS.DOMINANT]: { cost: 3, hp: 12, atk: 5, speed: 1, vision: 4 },
-    [INSTINCTS.CHASSEUR]: { cost: 4, hp: 12, atk: 4, speed: 2, vision: 5 },
+    [INSTINCTS.TERRITORIAL]: { cost: 3, hp: 13, atk: 3, speed: 1, vision: 0 },
+    [INSTINCTS.DOMINANT]: { cost: 2, hp: 12, atk: 5, speed: 1, vision: 4 },
+    [INSTINCTS.CHASSEUR]: { cost: 4, hp: 11, atk: 4, speed: 2, vision: 5 },
   },
 
   /** Planchers de statistiques (§6.6). */

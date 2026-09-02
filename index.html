@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Instynkt — palier 1 : moteur</title>
+    <title>Instynkt</title>
+    <meta name="description" content="Jeu de stratégie tour par tour où l’on ne déplace jamais ses créatures." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231B1F1A'/%3E%3Cpath d='M16 6l7 16-7-4-7 4z' fill='%23E8E2D2'/%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,51 +13,16 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/tokens.css" />
-    <link rel="stylesheet" href="css/dev.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/board.css" />
+    <link rel="stylesheet" href="css/cards.css" />
   </head>
   <body>
-    <div class="page">
-      <header>
-        <h1>INSTYNKT</h1>
-        <p class="sous-titre">
-          Palier 1 — moteur pur : PRNG seedé, génération de plateau, régions de biome.
-          Aucune logique de jeu dans cette page : elle ne fait que lire le moteur.
-        </p>
-      </header>
-
-      <div class="contenu">
-        <div>
-          <div class="plateau" id="plateau" data-regions="off"></div>
-          <pre id="ascii"></pre>
-        </div>
-
-        <aside>
-          <section class="panneau">
-            <h2>Plateau</h2>
-            <div id="stats"></div>
-            <div class="champs">
-              <input id="seed" type="number" min="0" step="1" aria-label="Graine" />
-              <button id="regenerer" type="button">Regénérer</button>
-            </div>
-            <label class="ligne" style="margin-top: 8px">
-              <span>Afficher les régions</span>
-              <input id="regions" type="checkbox" />
-            </label>
-          </section>
-
-          <section class="panneau" style="margin-top: 16px">
-            <h2>Biomes</h2>
-            <div class="legende" id="legende"></div>
-          </section>
-
-          <section class="panneau" style="margin-top: 16px">
-            <h2>State</h2>
-            <p id="etat" style="margin: 0; color: var(--parchemin-attenue)"></p>
-          </section>
-        </aside>
-      </div>
-    </div>
-
-    <script type="module" src="js/ui/dev-board.js"></script>
+    <div id="app"></div>
+    <noscript>Instynkt a besoin de JavaScript pour fonctionner.</noscript>
+    <script type="module">
+      import { createApp } from './js/ui/app.js';
+      createApp(document.getElementById('app'));
+    </script>
   </body>
 </html>

@@ -1,0 +1,346 @@
+/* Coquille de l'application : écrans, panneaux, boutons.
+   Tout ici reste sobre — sur fond encre, sans ombre portée ni dégradé (§8). */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--encre);
+  color: var(--parchemin);
+  font-family: var(--font-corps);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { position: relative; min-height: 100vh; }
+
+.couche-ecran { min-height: 100vh; }
+.couche-banniere { position: fixed; top: 0; left: 0; right: 0; z-index: 40; pointer-events: none; }
+.couche-overlay { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
+.couche-overlay > * { pointer-events: auto; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: var(--parchemin);
+  background: transparent;
+  border: 1px solid var(--parchemin-faible);
+  border-radius: 2px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+button:hover:not(:disabled) { border-color: var(--ambre); color: var(--ambre); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+button:focus-visible { outline: 2px solid var(--ambre); outline-offset: 2px; }
+
+button.primaire {
+  background: var(--ambre);
+  border-color: var(--ambre);
+  color: var(--encre);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+button.primaire:hover:not(:disabled) { background: var(--parchemin); border-color: var(--parchemin); color: var(--encre); }
+
+/* --- Écrans pleine page --------------------------------------------------- */
+
+.ecran {
+  min-height: 100vh;
+  padding: clamp(20px, 5vh, 64px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.accueil .logo { width: min(420px, 80vw); color: var(--parchemin); display: block; }
+.accueil .accroche { max-width: 46ch; color: var(--parchemin-attenue); font-size: 16px; margin: 0; }
+.accueil .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.accueil .note { color: var(--parchemin-faible); margin: 0; }
+
+/* --- Deckbuilding --------------------------------------------------------- */
+
+.deck { justify-content: flex-start; text-align: left; align-items: stretch; gap: 20px; }
+.deck header { display: grid; gap: 4px; position: relative; }
+.deck header h1 { font-size: clamp(20px, 3vw, 30px); }
+.deck header p { margin: 0; color: var(--parchemin-attenue); max-width: 62ch; }
+.deck .compteur {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ambre);
+}
+.deck .grille-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.deck footer { display: flex; justify-content: flex-end; }
+
+/* --- Passage hot-seat et fin de partie ------------------------------------ */
+
+.passage,
+.fin {
+  position: fixed;
+  inset: 0;
+  background: var(--encre);
+  gap: 12px;
+}
+.passage { border-top: 4px solid var(--sang); }
+.passage[data-owner='1'] { border-top-color: var(--azur); }
+.passage .sur-titre { margin: 0; letter-spacing: 0.24em; text-transform: uppercase; color: var(--parchemin-faible); }
+.passage h1 { font-size: clamp(26px, 5vw, 44px); }
+.passage p { color: var(--parchemin-attenue); margin: 0; }
+.passage .resume { min-width: min(360px, 88vw); margin: 12px 0 4px; }
+
+.fin h1 { font-size: clamp(28px, 6vw, 52px); color: var(--sang); }
+.fin[data-owner='1'] h1 { color: var(--azur); }
+.fin .bilan { display: grid; gap: 4px; min-width: min(420px, 90vw); margin: 8px 0 16px; }
+.fin .actions { display: flex; gap: 12px; }
+
+.bilan .ligne,
+.stats-globales .ligne {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--encre-trait);
+  padding: 5px 0;
+}
+.bilan dt, .stats-globales dt { color: var(--parchemin-attenue); }
+.bilan dd, .stats-globales dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* --- Règles --------------------------------------------------------------- */
+
+.regles { text-align: left; align-items: stretch; justify-content: flex-start; max-width: 1000px; margin: 0 auto; }
+.regles h1 { font-size: clamp(24px, 4vw, 34px); }
+.regles h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ambre); margin-bottom: 6px; }
+.regles ul { margin: 0; padding-left: 18px; color: var(--parchemin-attenue); }
+.regles li { margin-bottom: 4px; }
+.regles .colonnes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+.regles .liste-instincts,
+.regles .liste-biomes { list-style: none; padding: 0; display: grid; gap: 10px; }
+.regles .liste-instincts li {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  grid-template-areas: 'glyphe nom' '. regle' '. stats';
+  gap: 2px 10px;
+  align-items: start;
+}
+.regles .glyphe-regle { grid-area: glyphe; width: 22px; color: var(--parchemin); }
+.regles .liste-instincts b { grid-area: nom; font-family: var(--font-display); letter-spacing: 0.06em; color: var(--parchemin); }
+.regles .liste-instincts span { grid-area: regle; }
+.regles .liste-instincts em { grid-area: stats; font-style: normal; color: var(--parchemin-faible); font-variant-numeric: tabular-nums; }
+.regles .liste-biomes li { display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: baseline; }
+.regles .liste-biomes b { font-family: var(--font-display); letter-spacing: 0.05em; }
+.regles .liste-biomes li[data-biome='foret'] b { color: var(--mousse); }
+.regles .liste-biomes li[data-biome='jungle'] b { color: #6f9b82; }
+.regles .liste-biomes li[data-biome='plaine'] b { color: var(--herbe); }
+.regles .liste-biomes li[data-biome='desert'] b { color: var(--sable); }
+.regles .liste-biomes li[data-biome='montagne'] b { color: #9b9793; }
+.regles > button { align-self: flex-start; }
+
+/* --- Bannières ------------------------------------------------------------ */
+
+.banniere {
+  margin: 12px auto;
+  width: fit-content;
+  max-width: 92vw;
+  padding: 8px 18px;
+  background: var(--encre-clair);
+  border: 1px solid var(--encre-trait);
+  border-left: 3px solid var(--ambre);
+  color: var(--parchemin-attenue);
+}
+.banniere strong { color: var(--parchemin); }
+.banniere.refus { border-left-color: var(--sang); }
+
+/* --- Écran de partie ------------------------------------------------------ */
+
+.ecran-partie {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 10px clamp(10px, 2vw, 22px) 14px;
+}
+
+.aire {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 310px);
+  gap: clamp(10px, 2vw, 22px);
+  min-height: 0;
+}
+
+.bandeau {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--encre-trait);
+  background: var(--encre-clair);
+  padding: 8px 14px;
+}
+.bandeau.adversaire { grid-auto-flow: column; align-items: center; justify-content: start; gap: 20px; }
+
+.qui {
+  font-family: var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sang);
+}
+.qui[data-owner='1'] { color: var(--azur); }
+
+.compteur, .etiquette-debug { color: var(--parchemin-attenue); }
+.etiquette-debug { color: var(--ambre); letter-spacing: 0.2em; font-size: 11px; }
+
+.dos-cartes { display: flex; gap: 3px; }
+.dos-cartes .dos { display: block; width: 16px; }
+.dos-cartes .dos svg { width: 100%; height: auto; display: block; }
+
+/* Énergie : des cristaux qui se remplissent un par un. */
+.energie { display: flex; align-items: center; gap: 8px; }
+.energie .valeur { font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: 16px; }
+.energie .cristaux { display: flex; gap: 2px; color: var(--ambre); }
+.energie .cristaux i { display: block; width: 9px; }
+.energie .cristaux i svg { display: block; width: 100%; }
+.energie .cristaux .vide { color: var(--parchemin-faible); }
+
+/* --- Inspecteur ----------------------------------------------------------- */
+
+.inspecteur {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 0;
+}
+.inspecteur > section {
+  border: 1px solid var(--encre-trait);
+  background: var(--encre-clair);
+  padding: 12px;
+}
+.inspecteur h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--parchemin-faible);
+  margin-bottom: 8px;
+}
+.fiche header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.fiche header h2 { margin: 0; font-size: 17px; letter-spacing: 0.08em; color: var(--parchemin); text-transform: none; }
+.fiche .glyphe-fiche { width: 22px; color: var(--sang); }
+.fiche[data-owner='1'] .glyphe-fiche { color: var(--azur); }
+.fiche .appartenance { margin-left: auto; font-size: 11px; color: var(--parchemin-faible); }
+
+/* Les chiffres de stats sont l'élément typographique fort (§8). */
+.chiffres { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+.chiffre { display: grid; gap: 0; text-align: center; padding: 6px 2px; background: rgba(232, 226, 210, 0.04); }
+.chiffre b {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2.4vh, 22px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.chiffre span { font-size: 10px; letter-spacing: 0.12em; color: var(--parchemin-faible); }
+
+.fiche .regle, .fiche .terrain, .fiche.vide p { margin: 0 0 6px; color: var(--parchemin-attenue); }
+.fiche .terrain { font-size: 12px; color: var(--parchemin-faible); }
+.fiche .effets { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.fiche .effets li {
+  border: 1px solid var(--ambre);
+  color: var(--ambre);
+  padding: 1px 7px;
+  font-size: 11px;
+  border-radius: 2px;
+}
+
+.journal { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.journal ol {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  font-size: 12px;
+  color: var(--parchemin-attenue);
+  scrollbar-width: thin;
+}
+.journal li { border-left: 2px solid var(--sang); padding-left: 7px; }
+.journal li[data-owner='1'] { border-left-color: var(--azur); }
+
+.outils { display: grid; gap: 8px; }
+.outils .bascule { display: flex; align-items: center; gap: 8px; color: var(--parchemin-attenue); cursor: pointer; }
+
+/* --- Bandeau du joueur ---------------------------------------------------- */
+
+.bandeau.joueur { gap: 10px; }
+.ligne-haute { display: flex; align-items: center; gap: 16px; }
+.ligne-haute .fin-tour { margin-left: auto; }
+
+.chrono {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--parchemin);
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.chrono small { font-size: 12px; color: var(--parchemin-faible); }
+.chrono[data-urgent] { color: var(--sang); animation: bat 1s ease-in-out infinite; }
+@keyframes bat { 50% { opacity: 0.35; } }
+
+.ligne-basse {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(10px, 1.6vw, 22px);
+  align-items: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrono[data-urgent] { animation: none; }
+}
+
+/* --- Adaptations ---------------------------------------------------------- */
+
+.consigne-placement { margin: 0; color: var(--parchemin-attenue); text-align: center; }
+
+@media (max-width: 980px) {
+  .ecran-partie { height: auto; min-height: 100vh; }
+  .aire { grid-template-columns: minmax(0, 1fr); }
+  .inspecteur { grid-template-rows: auto auto auto; }
+  .journal ol { max-height: 140px; }
+  .plateau { height: auto; width: min(100%, 78vh); }
+}
+
+/* Les cristaux gagnés se remplissent un par un. */
+.energie .cristaux .se-remplit {
+  animation: cristal calc(360ms * var(--anim)) ease-out var(--retard, 0ms) both;
+}
+@keyframes cristal {
+  0% { opacity: 0; transform: scale(0.3); }
+  60% { opacity: 1; transform: scale(1.35); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .energie .cristaux .se-remplit { animation: none; }
+}

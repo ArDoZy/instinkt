@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Instynkt — banc d’essai des prévisualisations</title>
+    <link rel="stylesheet" href="../css/tokens.css" />
+    <link rel="stylesheet" href="../css/app.css" />
+    <link rel="stylesheet" href="../css/board.css" />
+    <style>
+      body { padding: 24px; }
+      h1 { font-family: var(--font-display); letter-spacing: 0.16em; }
+      .situations { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+      figure { margin: 0; display: grid; gap: 8px; }
+      figcaption { color: var(--parchemin-attenue); font-size: 13px; }
+      .situation { display: grid; }
+      .situation .plateau { height: auto; width: 100%; }
+    </style>
+  </head>
+  <body>
+    <h1>Prévisualisations</h1>
+    <p style="color: var(--parchemin-attenue)">
+      Situations fabriquées, rendues par les modules du jeu. Le halo clair est la vision,
+      le trait ambre la cible, la case en pointillés la prochaine position.
+    </p>
+    <div id="situations"></div>
+    <script type="module" src="apercu.js"></script>
+  </body>
+</html>

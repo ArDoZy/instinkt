@@ -1,0 +1,355 @@
+/* Le plateau : le seul élément qui porte l'audace (§8).
+   Encre, papier, textures de biome, tracés de trajectoires. */
+
+.hote-plateau {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Le plateau prend toute la hauteur disponible et reste carré. */
+.plateau {
+  position: relative;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+  background: var(--encre);
+  border: 1px solid var(--encre-trait);
+  box-shadow: 0 0 0 1px rgba(232, 226, 210, 0.06);
+  user-select: none;
+}
+
+.cases {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+}
+
+.case {
+  position: relative;
+  border-radius: var(--rayon-case);
+  outline: 1px solid rgba(27, 31, 26, 0.3);
+  outline-offset: -1px;
+  cursor: pointer;
+  transition: filter calc(140ms * var(--anim)) ease;
+}
+
+/* --- Textures de biome : hachures, points, granulé (jamais de dégradé) ---- */
+
+.case[data-biome='foret'] {
+  background-color: var(--biome-foret);
+  background-image: repeating-linear-gradient(45deg, rgba(27, 31, 26, 0.22) 0 1px, transparent 1px 6px);
+}
+.case[data-biome='jungle'] {
+  background-color: var(--biome-jungle);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(27, 31, 26, 0.3) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-45deg, rgba(232, 226, 210, 0.07) 0 1px, transparent 1px 7px);
+}
+.case[data-biome='plaine'] {
+  background-color: var(--biome-plaine);
+  background-image: repeating-linear-gradient(90deg, rgba(27, 31, 26, 0.16) 0 1px, transparent 1px 8px);
+}
+.case[data-biome='desert'] {
+  background-color: var(--biome-desert);
+  background-image: radial-gradient(rgba(27, 31, 26, 0.25) 1px, transparent 1px);
+  background-size: 7px 7px;
+}
+.case[data-biome='montagne'] {
+  background-color: var(--biome-montagne);
+  background-image: repeating-linear-gradient(135deg, rgba(27, 31, 26, 0.42) 0 2px, transparent 2px 6px);
+  cursor: not-allowed;
+}
+
+/* --- Frontières de région : c'est ce qui rend le Territorial lisible ------ */
+
+.case::before,
+.case::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+.case[data-bord-gauche]::before,
+.case[data-bord-droit]::after {
+  top: 0;
+  bottom: 0;
+  width: var(--trait-region);
+  background: var(--encre);
+}
+.case[data-bord-gauche]::before { left: 0; }
+.case[data-bord-droit]::after { right: 0; }
+
+.case[data-bord-haut] { box-shadow: inset 0 var(--trait-region) 0 0 var(--encre); }
+.case[data-bord-bas] { box-shadow: inset 0 calc(-1 * var(--trait-region)) 0 0 var(--encre); }
+.case[data-bord-haut][data-bord-bas] {
+  box-shadow:
+    inset 0 var(--trait-region) 0 0 var(--encre),
+    inset 0 calc(-1 * var(--trait-region)) 0 0 var(--encre);
+}
+
+.mediane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0;
+  border-top: 1px dashed rgba(232, 226, 210, 0.45);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* --- Surbrillances -------------------------------------------------------- */
+
+.case[data-vision] { filter: brightness(1.22) saturate(1.08); }
+.case[data-hors-vision] { filter: brightness(0.52) saturate(0.55); }
+
+.case[data-mark='legal'] {
+  box-shadow: inset 0 0 0 2px var(--ambre);
+  filter: brightness(1.1);
+}
+.case[data-mark='illegal'] { filter: grayscale(0.85) brightness(0.6); }
+.case[data-mark='zone'] {
+  box-shadow: inset 0 0 0 2px rgba(232, 226, 210, 0.85);
+}
+.case[data-mark='menace'] { box-shadow: inset 0 0 0 2px var(--sang); }
+
+/* --- Calques -------------------------------------------------------------- */
+
+.calque-traits,
+.creatures,
+.overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.calque-traits { z-index: 2; }
+.creatures { z-index: 4; }
+.overlays { z-index: 5; }
+
+.trait-cible {
+  stroke: var(--ambre);
+  stroke-width: 0.045;
+  stroke-dasharray: 0.16 0.12;
+  opacity: 0.95;
+}
+.trait-chemin {
+  fill: none;
+  stroke: var(--parchemin);
+  stroke-width: 0.05;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+/* --- Créatures ------------------------------------------------------------ */
+
+.creature,
+.fantome,
+.leurre,
+.nombre,
+.particules {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12.5%;
+  height: 12.5%;
+  transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%));
+}
+
+.creature {
+  display: grid;
+  place-items: center;
+  color: var(--sang);
+  transition: transform calc(500ms * var(--anim)) cubic-bezier(0.4, 0.1, 0.2, 1);
+}
+.creature[data-owner='1'] { color: var(--azur); }
+
+.creature .silhouette {
+  position: absolute;
+  inset: 12%;
+  opacity: 0.95;
+  filter: drop-shadow(0 1px 0 rgba(27, 31, 26, 0.55));
+}
+.creature .silhouette svg { width: 100%; height: 100%; }
+
+.creature .glyphe {
+  position: relative;
+  width: 46%;
+  color: var(--parchemin);
+  transform: translateY(-6%);
+}
+.creature .glyphe svg { width: 100%; height: 100%; display: block; }
+
+.creature .pv {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 7%;
+  height: 3px;
+  background: rgba(27, 31, 26, 0.7);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.creature .pv i {
+  display: block;
+  height: 100%;
+  background: var(--parchemin);
+  transition: width calc(320ms * var(--anim)) ease;
+}
+
+.creature .blesse {
+  position: absolute;
+  top: 4%;
+  right: 6%;
+  width: 16%;
+  color: var(--sang);
+  opacity: 0;
+}
+.creature[data-owner='1'] .blesse { color: var(--ambre); }
+.creature.est-blessee .blesse { opacity: 1; }
+.creature.est-blessee .pv i { background: var(--ambre); }
+
+.creature.selectionnee::after {
+  content: '';
+  position: absolute;
+  inset: 6%;
+  border: 2px solid var(--ambre);
+  border-radius: 3px;
+}
+
+/* --- Repères -------------------------------------------------------------- */
+
+.fantome {
+  border: 2px dashed var(--parchemin);
+  border-radius: 3px;
+  opacity: 0.6;
+  box-sizing: border-box;
+}
+.fantome::after {
+  content: '';
+  position: absolute;
+  inset: 38%;
+  border-radius: 50%;
+  background: var(--parchemin);
+  opacity: 0.5;
+}
+
+.leurre { color: var(--sang); display: grid; place-items: center; }
+.leurre[data-owner='1'] { color: var(--azur); }
+.leurre svg { width: 62%; animation: respire 2.4s ease-in-out infinite; }
+
+.nombre {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: clamp(14px, 2.4vh, 22px);
+  font-weight: 500;
+  color: var(--parchemin);
+  text-shadow: 0 1px 0 var(--encre), 0 0 6px var(--encre);
+  animation: monte calc(880ms * var(--anim)) ease-out forwards;
+}
+.nombre.absorbe { color: var(--ambre); }
+
+.particules { display: grid; place-items: center; color: var(--sang); }
+.particules[data-owner='1'] { color: var(--azur); }
+.particules svg { width: 100%; height: 100%; }
+.particules path {
+  fill: currentColor;
+  animation: eclate calc(760ms * var(--anim)) ease-out forwards;
+  transform: rotate(var(--a));
+}
+
+/* --- Animations ----------------------------------------------------------- */
+
+.case.pulse { animation: pulse-case calc(420ms * var(--anim)) ease-out; }
+.case.mute { animation: mue-case calc(520ms * var(--anim)) ease-out var(--retard, 0ms) both; }
+
+.creature.apparait { animation: apparait calc(420ms * var(--anim)) cubic-bezier(0.2, 1.5, 0.4, 1); }
+.creature.frappe { animation: frappe calc(420ms * var(--anim)) ease-in-out; }
+.creature.touchee .silhouette { animation: flash calc(320ms * var(--anim)) ease-out; }
+.creature.meurt { animation: meurt calc(460ms * var(--anim)) ease-in forwards; }
+.creature.mue .glyphe { animation: pivote calc(400ms * var(--anim)) ease-in-out; }
+.creature.mue::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: onde calc(520ms * var(--anim)) ease-out forwards;
+}
+.creature.regenere .pv i { background: var(--herbe); }
+
+@keyframes apparait {
+  from { transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%)) scale(0); opacity: 0; }
+  to { transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%)) scale(1); opacity: 1; }
+}
+@keyframes frappe {
+  50% {
+    transform: translate(
+      calc(var(--x) * 100% + var(--dx, 0) * 100%),
+      calc(var(--y) * 100% + var(--dy, 0) * 100%)
+    );
+  }
+}
+@keyframes flash {
+  0% { filter: brightness(6) saturate(0); }
+  100% { filter: none; }
+}
+@keyframes meurt {
+  to { transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%)) scale(0.6); opacity: 0; }
+}
+@keyframes pivote {
+  50% { transform: translateY(-6%) rotateY(90deg) scale(0.6); }
+}
+@keyframes onde {
+  from { opacity: 0.9; transform: scale(0.4); }
+  to { opacity: 0; transform: scale(1.9); }
+}
+@keyframes pulse-case {
+  50% { filter: brightness(1.7); }
+}
+@keyframes mue-case {
+  0% { transform: scale(1); filter: brightness(1); }
+  40% { transform: scale(0.82); filter: brightness(1.9); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes monte {
+  0% { opacity: 0; transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100%)); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(var(--x) * 100%), calc(var(--y) * 100% - 60%)); }
+}
+@keyframes eclate {
+  from { opacity: 1; }
+  to { opacity: 0; transform: rotate(var(--a)) translateX(16px) scale(0.4); }
+}
+@keyframes respire {
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creature,
+  .creature .pv i { transition: none; }
+  .case.pulse,
+  .case.mute,
+  .creature.apparait,
+  .creature.frappe,
+  .creature.meurt,
+  .creature.mue .glyphe,
+  .creature.mue::before,
+  .nombre,
+  .particules path,
+  .leurre svg { animation: none; }
+  .creature.meurt { opacity: 0; }
+}
+
+/* Parcours au clavier : la case focalisée est nettement marquée. */
+.case:focus-visible {
+  outline: 3px solid var(--ambre);
+  outline-offset: -3px;
+  z-index: 1;
+}

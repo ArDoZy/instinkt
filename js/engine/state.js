@@ -7,7 +7,7 @@
  */
 
 import { BALANCE } from './constants.js';
-import { createRng, randomSeed, rngInt, rngShuffle } from './prng.js';
+import { createRng, randomSeed, rngShuffle } from './prng.js';
 import { generateBoard, computeRegions, isPassableCell } from './board.js';
 import { ALL_CELLS, halfOfCell } from './geometry.js';
 
@@ -33,9 +33,10 @@ export function createGame(options = {}) {
   const { board, attempts } = generateBoard(rng);
   const { regions, regionOfCell } = computeRegions(board);
 
-  // Tirage au sort du Joueur 1 : il place son fuyard en premier, mais c'est le
-  // Joueur 2 qui joue la première manche (§4).
-  const firstPlacer = rngInt(rng, 2);
+  // Le Joueur 1 place son fuyard en premier ; le Joueur 2 joue la première
+  // manche, en compensation de l'information ainsi donnée (§4). Qui s'assied
+  // en Joueur 1 se tire au sort à la table, pas dans le moteur.
+  const firstPlacer = 0;
   const decks = options.decks ?? [[], []];
   const names = options.names ?? ['Joueur A', 'Joueur B'];
 
@@ -77,10 +78,14 @@ export function createGame(options = {}) {
     lastCombatCells: [],
     /** Instincts déjà invoqués pendant la manche courante (§4). */
     summonedInstinctsThisTurn: [],
+    /** Joueur devant défausser après une pioche à main pleine (§3.2). */
+    pendingDiscard: null,
     /** Journal lisible : { round, player, text }. */
     log: [],
-    /** File d'événements de la dernière résolution, rejouée par la vue. */
+    /** File d'événements de la dernière action, rejouée par la vue. */
     events: [],
+    /** Événements de la dernière résolution — bouton « rejouer le dernier tour ». */
+    lastTurnEvents: [],
     winner: null,
     endedReason: null,
   };
